@@ -1,0 +1,38 @@
+[
+  {
+    "id": "234",
+    "imagen": "img/camisa_azul.png",
+    "nombre": "CAMISA AZUL",
+    "categoria": "CAMISAS",
+    "stock": 2,
+    "estado": "DISPONIBLE",
+    "precio": 200000.0
+  },
+  {
+    "id": "235",
+    "imagen": "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w\u003d200",
+    "nombre": "PANTALÓN NEGRO",
+    "categoria": "PANTALONES",
+    "stock": 5,
+    "estado": "DISPONIBLE",
+    "precio": 150000.0
+  },
+  {
+    "id": "236",
+    "imagen": "img/bolso_cuero.png",
+    "nombre": "BOLSO DE CUERO",
+    "categoria": "ACCESORIOS",
+    "stock": 0,
+    "estado": "AGOTADO",
+    "precio": 120000.0
+  },
+  {
+    "id": "237",
+    "imagen": "img/camisa_blanca.png",
+    "nombre": "CAMISA BLANCA",
+    "categoria": "CAMISAS",
+    "stock": 4,
+    "estado": "DISPONIBLE",
+    "precio": 180000.0
+  }
+]

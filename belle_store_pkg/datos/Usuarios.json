@@ -1,0 +1,22 @@
+[
+  {
+    "id": "USR-ADMIN",
+    "nombreCompleto": "Administrador Belle",
+    "numeroIdentificacion": "1000000001",
+    "correo": "admin@belle.com",
+    "celular": "3000000000",
+    "direccion": "Oficina Principal Belle",
+    "contrasena": "admin123",
+    "rol": "ADMIN"
+  },
+  {
+    "id": "USR-001",
+    "nombreCompleto": "María López",
+    "numeroIdentificacion": "28483",
+    "correo": "maria@correo.com",
+    "celular": "3001234567",
+    "direccion": "Cll 1 # 2",
+    "contrasena": "cliente123",
+    "rol": "CLIENTE"
+  }
+]

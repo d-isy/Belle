@@ -1,0 +1,36 @@
+[
+  {
+    "id": "111",
+    "clienteId": "28483",
+    "articulos": [
+      {
+        "productoId": "234",
+        "nombreProducto": "Camisa",
+        "cantidad": 1,
+        "precioUnitario": 200000.0
+      }
+    ],
+    "totalArticulos": 1,
+    "direccion": "Cll 1 # 2",
+    "estado": "No Entregado",
+    "valorTotal": 200000.0,
+    "fecha": "05/10/2026 05:31:01"
+  },
+  {
+    "id": "112",
+    "clienteId": "28483",
+    "articulos": [
+      {
+        "productoId": "235",
+        "nombreProducto": "Pantalón",
+        "cantidad": 1,
+        "precioUnitario": 150000.0
+      }
+    ],
+    "totalArticulos": 1,
+    "direccion": "Cll 1 # 2",
+    "estado": "Entregado",
+    "valorTotal": 150000.0,
+    "fecha": "06/10/2026 10:15:30"
+  }
+]

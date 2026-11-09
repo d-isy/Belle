@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/13"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.mycompany.belle_store.controladores.LoginController"
+            prefWidth="1280.0" prefHeight="768.0"
+            stylesheets="@css/estilos.css">
+
+    <!-- ========================================================================= -->
+    <!-- CABECERA GLOBAL (Header Belle Store)                                      -->
+    <!-- ========================================================================= -->
+    <top>
+        <HBox styleClass="cabecera-global" alignment="CENTER_LEFT" spacing="20">
+            <!-- Marca / Logo -->
+            <Label text="Belle store" styleClass="logo-belle" />
+
+            <!-- Espaciador flexible -->
+            <Region HBox.hgrow="ALWAYS" />
+
+            <!-- Enlaces de navegación central -->
+            <HBox alignment="CENTER" spacing="25">
+                <Label text="Hombre" styleClass="nav-link" />
+                <Label text="Mujer" styleClass="nav-link" />
+                <Label text="Accesorios" styleClass="nav-link" />
+            </HBox>
+
+            <!-- Espaciador flexible -->
+            <Region HBox.hgrow="ALWAYS" />
+
+            <!-- Iconos de acción a la derecha -->
+            <HBox alignment="CENTER_RIGHT" spacing="18">
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/search.png" />
+                    </image>
+                </ImageView>
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/heart.png" />
+                    </image>
+                </ImageView>
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/cart.png" />
+                    </image>
+                </ImageView>
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/menu.png" />
+                    </image>
+                </ImageView>
+            </HBox>
+        </HBox>
+    </top>
+
+    <!-- ========================================================================= -->
+    <!-- CONTENIDO PRINCIPAL: 50% Imagen 1 de Figma + 50% Formulario de Login     -->
+    <!-- ========================================================================= -->
+    <center>
+        <GridPane alignment="CENTER">
+            <columnConstraints>
+                <!-- Mitad izquierda: 50% exacto del ancho disponible -->
+                <ColumnConstraints percentWidth="50.0" hgrow="ALWAYS" />
+                <!-- Mitad derecha: 50% exacto del ancho disponible -->
+                <ColumnConstraints percentWidth="50.0" hgrow="ALWAYS" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints vgrow="ALWAYS" />
+            </rowConstraints>
+            <children>
+                <!-- SECCIÓN IZQUIERDA (50%): Imagen 1 de Figma (Mujer con bolso) -->
+                <StackPane fx:id="contenedorImagen"
+                           GridPane.columnIndex="0" GridPane.rowIndex="0"
+                           minWidth="0" minHeight="0"
+                           style="-fx-background-color: #D9D9D9;"
+                           alignment="CENTER">
+                    <ImageView fx:id="imagenEditorial"
+                               preserveRatio="true"
+                               smooth="true">
+                        <image>
+                            <Image url="@img/image1.png" />
+                        </image>
+                    </ImageView>
+                </StackPane>
+
+                <!-- SECCIÓN DERECHA (50%): Formulario Iniciar Sesión centrado -->
+                <StackPane GridPane.columnIndex="1" GridPane.rowIndex="0"
+                           style="-fx-background-color: #FFFFFF;"
+                           alignment="CENTER">
+                    <padding>
+                        <Insets top="25" right="35" bottom="25" left="35" />
+                    </padding>
+                    <VBox styleClass="tarjeta-formulario"
+                          maxWidth="460" spacing="18"
+                          alignment="CENTER">
+
+                        <!-- Título -->
+                        <Label text="Iniciar sesión" styleClass="titulo-formulario" />
+
+                        <!-- Campo Usuario -->
+                        <VBox spacing="6" alignment="CENTER_LEFT" maxWidth="Infinity">
+                            <Label text="Usuario:" styleClass="etiqueta-campo" />
+                            <TextField fx:id="campoUsuario"
+                                       promptText="Correo electrónico o 'admin'"
+                                       styleClass="campo-texto"
+                                       maxWidth="Infinity" />
+                        </VBox>
+
+                        <!-- Campo Clave -->
+                        <VBox spacing="6" alignment="CENTER_LEFT" maxWidth="Infinity">
+                            <Label text="Clave:" styleClass="etiqueta-campo" />
+                            <PasswordField fx:id="campoClave"
+                                           promptText="Contraseña"
+                                           styleClass="campo-texto"
+                                           maxWidth="Infinity"
+                                           onAction="#manejarIngreso" />
+                        </VBox>
+
+                        <!-- Mensaje de retroalimentación de error/éxito -->
+                        <Label fx:id="etiquetaMensaje"
+                               styleClass="mensaje-error"
+                               wrapText="true"
+                               visible="false"
+                               managed="false" />
+
+                        <!-- Indicador asíncrono de 'Cargando...' -->
+                        <HBox fx:id="contenedorCargando"
+                              alignment="CENTER" spacing="10"
+                              visible="false" managed="false">
+                            <ProgressIndicator prefWidth="24" prefHeight="24" />
+                            <Label text="Iniciando sesión..." styleClass="etiqueta-cargando" />
+                        </HBox>
+
+                        <!-- Botón Ingresar -->
+                        <Button fx:id="botonIngresar"
+                                text="Ingresar"
+                                styleClass="boton-primario"
+                                maxWidth="Infinity"
+                                onAction="#manejarIngreso" />
+
+                        <!-- Enlace a Registro -->
+                        <Hyperlink fx:id="enlaceRegistrarse"
+                                   text="Registrarse"
+                                   styleClass="enlace-registro"
+                                   onAction="#irARegistro" />
+                    </VBox>
+                </StackPane>
+            </children>
+        </GridPane>
+    </center>
+</BorderPane>

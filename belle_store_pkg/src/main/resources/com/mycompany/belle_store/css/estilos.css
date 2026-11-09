@@ -1,0 +1,212 @@
+/* ========================================================================= */
+/* ESTILOS GLOBALES - BELLE STORE (MATERIAL DE ESTUDIO)                      */
+/* ========================================================================= */
+
+.root {
+    -fx-font-family: 'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif;
+    -fx-background-color: #FFFFFF;
+}
+
+/* ========================================================================= */
+/* CABECERA (HEADER) GLOBAL                                                  */
+/* ========================================================================= */
+.cabecera-global {
+    -fx-background-color: #D9D9D9;
+    -fx-border-color: transparent transparent #4A4A4A transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 12 30 12 30;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.logo-belle {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #000000;
+}
+
+.nav-link {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #191919;
+    -fx-cursor: hand;
+    -fx-padding: 5 15 5 15;
+}
+
+.nav-link:hover {
+    -fx-text-fill: #555555;
+    -fx-underline: true;
+}
+
+.icono-cabecera {
+    -fx-cursor: hand;
+    -fx-opacity: 0.85;
+}
+
+.icono-cabecera:hover {
+    -fx-opacity: 1.0;
+}
+
+/* ========================================================================= */
+/* TARJETAS Y CONTENEDORES                                                   */
+/* ========================================================================= */
+.tarjeta-formulario {
+    -fx-background-color: #D9D9D9;
+    -fx-padding: 35 45 35 45;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-min-width: 440;
+    -fx-max-width: 480;
+}
+
+.titulo-formulario {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #000000;
+}
+
+.etiqueta-campo {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #000000;
+}
+
+.campo-texto {
+    -fx-background-color: #FFFEFE;
+    -fx-font-size: 16px;
+    -fx-pref-height: 48px;
+    -fx-border-color: transparent;
+    -fx-background-radius: 2;
+    -fx-padding: 0 14 0 14;
+}
+
+.campo-texto:focused {
+    -fx-border-color: #666666;
+    -fx-border-width: 1.5;
+}
+
+/* ========================================================================= */
+/* BOTONES DE ACCIÓN                                                         */
+/* ========================================================================= */
+.boton-primario {
+    -fx-background-color: #666666;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-pref-height: 50px;
+    -fx-cursor: hand;
+    -fx-background-radius: 2;
+}
+
+.boton-primario:hover {
+    -fx-background-color: #4D4D4D;
+}
+
+.boton-primario:pressed {
+    -fx-background-color: #333333;
+}
+
+.boton-secundario {
+    -fx-background-color: #D9D9D9;
+    -fx-text-fill: #333333;
+    -fx-border-color: #888888;
+    -fx-border-width: 1;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-cursor: hand;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+}
+
+.boton-secundario:hover {
+    -fx-background-color: #BFBFBF;
+}
+
+.boton-peligro {
+    -fx-background-color: #C62828;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 18 8 18;
+    -fx-cursor: hand;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+}
+
+.boton-peligro:hover {
+    -fx-background-color: #B71C1C;
+}
+
+.enlace-registro {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #272727;
+    -fx-cursor: hand;
+    -fx-underline: false;
+}
+
+.enlace-registro:hover {
+    -fx-text-fill: #000000;
+    -fx-underline: true;
+}
+
+/* ========================================================================= */
+/* RETROALIMENTACIÓN VISUAL Y CARGANDO                                       */
+/* ========================================================================= */
+.mensaje-error {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #D32F2F;
+}
+
+.mensaje-exito {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2E7D32;
+}
+
+.etiqueta-cargando {
+    -fx-font-size: 14px;
+    -fx-font-style: italic;
+    -fx-text-fill: #555555;
+}
+
+/* ========================================================================= */
+/* VISTA CLIENTE PLACEHOLDER                                                 */
+/* ========================================================================= */
+.tarjeta-cliente {
+    -fx-background-color: #F8F9FA;
+    -fx-border-color: #D9D9D9;
+    -fx-border-width: 1.5;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 30;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.08), 12, 0, 0, 4);
+}
+
+.etiqueta-dato-clave {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #555555;
+}
+
+.etiqueta-dato-valor {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111111;
+}
+
+.aviso-placeholder {
+    -fx-background-color: #FFF3CD;
+    -fx-border-color: #FFEEBA;
+    -fx-border-width: 1;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 12 16 12 16;
+}
+
+.aviso-placeholder-texto {
+    -fx-font-size: 14px;
+    -fx-text-fill: #856404;
+    -fx-font-weight: bold;
+}

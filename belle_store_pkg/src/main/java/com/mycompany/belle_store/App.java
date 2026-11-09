@@ -28,15 +28,21 @@ public class App extends Application {
     // =========================================================================
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("primary"), 640, 480);
+        // Carga de la vista inicial de Login
+        scene = new Scene(loadFXML("login"), 1280, 768);
         stage.setScene(scene);
-        stage.setTitle("Belle Store");
+        stage.setTitle("Belle Store - Iniciar Sesión");
+        stage.setMinWidth(1024);
+        stage.setMinHeight(680);
         stage.show();
     }
 
     // =========================================================================
     // 4. EVENTOS DE INTERFAZ Y NAVEGACIÓN
     // =========================================================================
+    /**
+     * Reemplaza el nodo raíz de la escena activa con otra vista FXML.
+     */
     public static void setRoot(String fxml) throws IOException {
         scene.setRoot(loadFXML(fxml));
     }
@@ -44,7 +50,7 @@ public class App extends Application {
     // =========================================================================
     // 5. LÓGICA DE NEGOCIO Y MÉTODOS AUXILIARES
     // =========================================================================
-    private static Parent loadFXML(String fxml) throws IOException {
+    public static Parent loadFXML(String fxml) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
         return fxmlLoader.load();
     }

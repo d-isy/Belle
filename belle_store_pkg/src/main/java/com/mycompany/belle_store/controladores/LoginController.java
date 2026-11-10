@@ -15,7 +15,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 import java.io.IOException;
@@ -128,10 +127,11 @@ public class LoginController {
     // =========================================================================
     /**
      * Configura el redimensionamiento responsivo de la imagen promocional (image 1)
-     * para que mantenga sus proporciones nativas ocupando el 50% izquierdo del frame.
+     * para que encaje por completo (contain) sin recortar a la modelo ni sus accesorios.
      */
     private void configurarEscalaImagen() {
         if (contenedorImagen != null && imagenEditorial != null) {
+            imagenEditorial.setPreserveRatio(true);
             contenedorImagen.widthProperty().addListener((obs, oldV, newV) -> ajustarDimensionesImagen());
             contenedorImagen.heightProperty().addListener((obs, oldV, newV) -> ajustarDimensionesImagen());
         }
@@ -149,14 +149,13 @@ public class LoginController {
         double anchoNativo = 720.0;
         double altoNativo = 1024.0;
 
-        // Escala para cubrir completamente el 50% izquierdo preservando proporción
-        double escala = Math.max(anchoContenedor / anchoNativo, altoContenedor / altoNativo);
+        // Escala 'contain' para que la imagen completa quepa sin ningún recorte
+        double escala = Math.min(anchoContenedor / anchoNativo, altoContenedor / altoNativo);
         imagenEditorial.setFitWidth(anchoNativo * escala);
         imagenEditorial.setFitHeight(altoNativo * escala);
 
-        // Recorte al área exacta del contenedor
-        Rectangle clip = new Rectangle(anchoContenedor, altoContenedor);
-        contenedorImagen.setClip(clip);
+        // Sin recorte para asegurar que toda la modelo sea visible
+        contenedorImagen.setClip(null);
     }
 
     /**

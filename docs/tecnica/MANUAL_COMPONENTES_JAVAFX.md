@@ -140,3 +140,77 @@ public class App extends Application {
 ### Ventajas didácticas:
 1. **Transición suave:** Al llamar `App.setRoot("registro")` o `App.setRoot("admin_dashboard")`, la ventana actual cambia su contenido al instante sin parpadear ni abrir nuevas instancias del Stage.
 2. **Centralización:** Toda la lógica de carga de recursos FXML se concentra en un único método `loadFXML`.
+
+---
+
+## 4. Restricción de Entrada de Caracteres con `TextFormatter`
+
+En formularios donde los campos requieren tipos de datos estrictos (por ejemplo, nombres que no deben aceptar números, o números de celular e identificación que no deben aceptar letras), JavaFX ofrece `TextFormatter`.
+
+### ¿Por qué usar `TextFormatter` en lugar de validar después de escribir?
+* Evita que caracteres no permitidos aparezcan en pantalla o se almacenen temporalmente en el buffer.
+* Ofrece retroalimentación inmediata al usuario al pulsar una tecla inválida.
+
+### Ejemplo didáctico:
+```java
+// 1. Restringir 'Nombre Completo' solo a letras y espacios (incluye tildes y ñ):
+UnaryOperator<TextFormatter.Change> filtroLetras = cambio -> {
+    String nuevoTexto = cambio.getControlNewText();
+    if (nuevoTexto.matches("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s]*$")) {
+        return cambio; // Permite el cambio
+    }
+    return null; // Rechaza el cambio (no se escribe el dígito o símbolo)
+};
+campoNombre.setTextFormatter(new TextFormatter<>(filtroLetras));
+
+// 2. Restringir 'Número de Celular' solo a dígitos numéricos y máximo 10 dígitos:
+UnaryOperator<TextFormatter.Change> filtroCelular = cambio -> {
+    String nuevoTexto = cambio.getControlNewText();
+    if (nuevoTexto.matches("^\\d*$") && nuevoTexto.length() <= 10) {
+        return cambio;
+    }
+    return null; // Rechaza letras o si excede los 10 dígitos
+};
+campoCelular.setTextFormatter(new TextFormatter<>(filtroCelular));
+```
+
+---
+
+## 5. Validación Reactiva en Tiempo Real y CSS Dinámico
+
+Para una experiencia de usuario fluida, las validaciones no deben esperar a que se presione el botón de envío.
+
+### Comparación de Contraseñas y Limpieza en Tiempo Real
+Usando escuchadores (`ChangeListener`) sobre la propiedad `textProperty()` de los campos de texto:
+
+```java
+// Escuchar cuando el usuario escribe en 'Confirmar Contraseña'
+campoConfirmarContrasena.textProperty().addListener((obs, oldV, newV) -> {
+    validarContrasenasEnTiempoReal();
+});
+
+private void validarContrasenasEnTiempoReal() {
+    String p1 = campoContrasena.getText();
+    String p2 = campoConfirmarContrasena.getText();
+
+    if (p2.isEmpty()) {
+        limpiarError(campoConfirmarContrasena, lblConfirmarContrasena);
+        return;
+    }
+
+    if (p1.equals(p2)) {
+        // Coinciden: aplicamos estilo verde de éxito
+        marcarValido(campoContrasena);
+        marcarValido(campoConfirmarContrasena);
+    } else {
+        // No coinciden: aplicamos borde rojo y etiqueta roja
+        marcarError(campoConfirmarContrasena, lblConfirmarContrasena);
+    }
+}
+```
+
+### Inyección de Clases CSS:
+Para resaltar errores, se agregan o remueven dinámicamente clases CSS en la lista `getStyleClass()` del control y de su etiqueta asociada:
+* `.campo-error`: Aplica `-fx-border-color: #D32F2F; -fx-border-width: 2px;`.
+* `.etiqueta-campo-error`: Aplica `-fx-text-fill: #D32F2F;`.
+* `.campo-valido`: Aplica `-fx-border-color: #2E7D32; -fx-border-width: 2px;`.

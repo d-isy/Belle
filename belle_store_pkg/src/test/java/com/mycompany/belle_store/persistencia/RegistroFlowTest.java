@@ -19,6 +19,12 @@ public class RegistroFlowTest {
         SeedDatos seed = new SeedDatos();
         seed.inicializarSiEsNecesario();
         gestorUsuarios = new GestorUsuarios();
+
+        // Asegurar idempotencia: si el usuario de prueba ya existía de una ejecución previa, limpiarlo
+        Usuario existente = gestorUsuarios.buscarPorCorreo("carlos.mendoza@correo.com");
+        if (existente != null) {
+            gestorUsuarios.eliminar(existente.getId());
+        }
     }
 
     @BeforeEach
@@ -101,5 +107,29 @@ public class RegistroFlowTest {
         assertTrue(SesionActual.haySesionIniciada());
         assertTrue(SesionActual.esCliente());
         assertEquals("Carrera 7 # 72 - 10", SesionActual.getUsuarioLogueado().getDireccion());
+    }
+
+    @Test
+    @Order(5)
+    public void testValidacionFiltrosTextoYPatrones() {
+        // Validación de nombres: solo letras y espacios permitidos
+        String patronNombre = "^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s]*$";
+        assertTrue("Carlos Mendoza".matches(patronNombre), "Nombre con letras válidas debe ser aceptado");
+        assertTrue("María José Peña".matches(patronNombre), "Nombre con tildes y ñ debe ser aceptado");
+        assertFalse("Carlos 123".matches(patronNombre), "Nombre con números no debe ser aceptado");
+        assertFalse("Carlos@Mendoza".matches(patronNombre), "Nombre con símbolos no debe ser aceptado");
+
+        // Validación de números de identificación y celular: solo dígitos
+        String patronDigitos = "^\\d*$";
+        assertTrue("1020304050".matches(patronDigitos), "Identificación numérica debe ser aceptada");
+        assertFalse("102030405A".matches(patronDigitos), "Identificación con letras debe ser rechazada");
+        assertTrue("3001234567".matches(patronDigitos), "Celular numérico debe ser aceptado");
+        assertFalse("300123456X".matches(patronDigitos), "Celular con letras debe ser rechazado");
+
+        // Validación de correo electrónico
+        String patronCorreo = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        assertTrue("cliente@correo.com".matches(patronCorreo));
+        assertFalse("correo-invalido.com".matches(patronCorreo));
+        assertFalse("cliente@".matches(patronCorreo));
     }
 }

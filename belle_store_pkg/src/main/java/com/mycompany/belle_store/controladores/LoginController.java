@@ -12,6 +12,7 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -35,7 +36,13 @@ public class LoginController {
     private ImageView imagenEditorial;
 
     @FXML
+    private Label etiquetaUsuario;
+
+    @FXML
     private TextField campoUsuario;
+
+    @FXML
+    private Label etiquetaClave;
 
     @FXML
     private PasswordField campoClave;
@@ -65,6 +72,7 @@ public class LoginController {
         limpiarMensaje();
         ocultarCargando();
         configurarEscalaImagen();
+        configurarLimpiezaEnTiempoReal();
     }
 
     // =========================================================================
@@ -78,9 +86,21 @@ public class LoginController {
         String usuarioTexto = campoUsuario.getText() != null ? campoUsuario.getText().trim() : "";
         String claveTexto = campoClave.getText() != null ? campoClave.getText().trim() : "";
 
+        limpiarErroresVisuales();
+
         // 1. Validación de campos obligatorios
-        if (usuarioTexto.isEmpty() || claveTexto.isEmpty()) {
-            mostrarMensaje("Por favor, ingresa tu usuario y contraseña.", true);
+        boolean hayError = false;
+        if (usuarioTexto.isEmpty()) {
+            marcarError(campoUsuario, etiquetaUsuario);
+            hayError = true;
+        }
+        if (claveTexto.isEmpty()) {
+            marcarError(campoClave, etiquetaClave);
+            hayError = true;
+        }
+
+        if (hayError) {
+            mostrarMensaje("Por favor, ingresa tu usuario/correo y contraseña.", true);
             return;
         }
 
@@ -104,6 +124,8 @@ public class LoginController {
                 // 5. Redirección según rol
                 redirigirSegunRol(usuarioAutenticado);
             } else {
+                marcarError(campoUsuario, etiquetaUsuario);
+                marcarError(campoClave, etiquetaClave);
                 mostrarMensaje("Usuario o contraseña incorrectos. Verifica tus datos.", true);
             }
         });
@@ -206,5 +228,43 @@ public class LoginController {
         etiquetaMensaje.setText("");
         etiquetaMensaje.setVisible(false);
         etiquetaMensaje.setManaged(false);
+    }
+
+    private void configurarLimpiezaEnTiempoReal() {
+        if (campoUsuario != null) {
+            campoUsuario.textProperty().addListener((obs, oldVal, newVal) -> {
+                limpiarError(campoUsuario, etiquetaUsuario);
+                limpiarMensaje();
+            });
+        }
+        if (campoClave != null) {
+            campoClave.textProperty().addListener((obs, oldVal, newVal) -> {
+                limpiarError(campoClave, etiquetaClave);
+                limpiarMensaje();
+            });
+        }
+    }
+
+    private void marcarError(TextInputControl campo, Label etiqueta) {
+        if (campo != null && !campo.getStyleClass().contains("campo-error")) {
+            campo.getStyleClass().add("campo-error");
+        }
+        if (etiqueta != null && !etiqueta.getStyleClass().contains("etiqueta-campo-error")) {
+            etiqueta.getStyleClass().add("etiqueta-campo-error");
+        }
+    }
+
+    private void limpiarError(TextInputControl campo, Label etiqueta) {
+        if (campo != null) {
+            campo.getStyleClass().remove("campo-error");
+        }
+        if (etiqueta != null) {
+            etiqueta.getStyleClass().remove("etiqueta-campo-error");
+        }
+    }
+
+    private void limpiarErroresVisuales() {
+        limpiarError(campoUsuario, etiquetaUsuario);
+        limpiarError(campoClave, etiquetaClave);
     }
 }

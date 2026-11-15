@@ -89,7 +89,7 @@
 
                         <!-- 1. Campo: Nombre Completo -->
                         <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
-                            <Label text="Nombre Completo:" styleClass="etiqueta-campo" />
+                            <Label fx:id="lblNombre" text="Nombre Completo:" styleClass="etiqueta-campo" />
                             <TextField fx:id="campoNombre"
                                        promptText="Ej. Carlos Mendoza"
                                        styleClass="campo-texto"
@@ -98,7 +98,7 @@
 
                         <!-- 2. Campo: Número de Identificación -->
                         <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
-                            <Label text="Número de Identificación:" styleClass="etiqueta-campo" />
+                            <Label fx:id="lblIdentificacion" text="Número de Identificación:" styleClass="etiqueta-campo" />
                             <TextField fx:id="campoIdentificacion"
                                        promptText="Ej. 1020304050"
                                        styleClass="campo-texto"
@@ -107,7 +107,7 @@
 
                         <!-- 3. Campo: Correo Electrónico -->
                         <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
-                            <Label text="Correo Electrónico:" styleClass="etiqueta-campo" />
+                            <Label fx:id="lblCorreo" text="Correo Electrónico:" styleClass="etiqueta-campo" />
                             <TextField fx:id="campoCorreo"
                                        promptText="ejemplo@correo.com"
                                        styleClass="campo-texto"
@@ -116,7 +116,7 @@
 
                         <!-- 4. Campo: Número de Celular -->
                         <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
-                            <Label text="Número de Celular:" styleClass="etiqueta-campo" />
+                            <Label fx:id="lblCelular" text="Número de Celular:" styleClass="etiqueta-campo" />
                             <TextField fx:id="campoCelular"
                                        promptText="Ej. 3001234567"
                                        styleClass="campo-texto"
@@ -125,7 +125,7 @@
 
                         <!-- 5. Campo: Dirección -->
                         <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
-                            <Label text="Dirección:" styleClass="etiqueta-campo" />
+                            <Label fx:id="lblDireccion" text="Dirección:" styleClass="etiqueta-campo" />
                             <TextField fx:id="campoDireccion"
                                        promptText="Ej. Carrera 15 # 45 - 20"
                                        styleClass="campo-texto"
@@ -134,7 +134,7 @@
 
                         <!-- 6. Campo: Contraseña -->
                         <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
-                            <Label text="Contraseña:" styleClass="etiqueta-campo" />
+                            <Label fx:id="lblContrasena" text="Contraseña:" styleClass="etiqueta-campo" />
                             <PasswordField fx:id="campoContrasena"
                                            promptText="Crea una contraseña segura"
                                            styleClass="campo-texto"
@@ -143,7 +143,7 @@
 
                         <!-- 7. Campo: Confirmar Contraseña -->
                         <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
-                            <Label text="Confirmar Contraseña:" styleClass="etiqueta-campo" />
+                            <Label fx:id="lblConfirmarContrasena" text="Confirmar Contraseña:" styleClass="etiqueta-campo" />
                             <PasswordField fx:id="campoConfirmarContrasena"
                                            promptText="Repite tu contraseña"
                                            styleClass="campo-texto"

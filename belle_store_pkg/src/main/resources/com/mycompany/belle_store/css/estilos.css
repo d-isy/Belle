@@ -86,6 +86,26 @@
 }
 
 /* ========================================================================= */
+/* RESALTADO DE ERRORES Y VALIDACIONES EN TIEMPO REAL                        */
+/* ========================================================================= */
+.campo-texto.campo-error,
+.campo-error {
+    -fx-border-color: #D32F2F;
+    -fx-border-width: 2px;
+}
+
+.etiqueta-campo.etiqueta-campo-error,
+.etiqueta-campo-error {
+    -fx-text-fill: #D32F2F;
+}
+
+.campo-texto.campo-valido,
+.campo-valido {
+    -fx-border-color: #2E7D32;
+    -fx-border-width: 2px;
+}
+
+/* ========================================================================= */
 /* BOTONES DE ACCIÓN (BORDES RECTOS - FIGMA)                                 */
 /* ========================================================================= */
 .boton-primario {

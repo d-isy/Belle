@@ -11,10 +11,13 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.layout.HBox;
 import javafx.util.Duration;
 
 import java.io.IOException;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 /**
@@ -27,22 +30,43 @@ public class RegistroController {
     // 1. COMPONENTES FXML (@FXML)
     // =========================================================================
     @FXML
+    private Label lblNombre;
+
+    @FXML
     private TextField campoNombre;
+
+    @FXML
+    private Label lblIdentificacion;
 
     @FXML
     private TextField campoIdentificacion;
 
     @FXML
+    private Label lblCorreo;
+
+    @FXML
     private TextField campoCorreo;
+
+    @FXML
+    private Label lblCelular;
 
     @FXML
     private TextField campoCelular;
 
     @FXML
+    private Label lblDireccion;
+
+    @FXML
     private TextField campoDireccion;
 
     @FXML
+    private Label lblContrasena;
+
+    @FXML
     private PasswordField campoContrasena;
+
+    @FXML
+    private Label lblConfirmarContrasena;
 
     @FXML
     private PasswordField campoConfirmarContrasena;
@@ -75,13 +99,15 @@ public class RegistroController {
     public void initialize() {
         limpiarMensaje();
         ocultarCargando();
+        configurarFiltrosTexto();
+        configurarValidacionEnTiempoReal();
     }
 
     // =========================================================================
     // 4. EVENTOS DE INTERFAZ Y NAVEGACIÓN (Acciones de botones y filtros)
     // =========================================================================
     /**
-     * Procesa el formulario de registro de un nuevo cliente.
+     * Procesa el formulario de registro de un nuevo cliente con validaciones visuales.
      */
     @FXML
     private void manejarRegistro(ActionEvent event) {
@@ -93,44 +119,100 @@ public class RegistroController {
         String contrasena = campoContrasena.getText() != null ? campoContrasena.getText() : "";
         String confirmarContrasena = campoConfirmarContrasena.getText() != null ? campoConfirmarContrasena.getText() : "";
 
-        // 1. Validación de campos obligatorios
-        if (nombre.isEmpty() || identificacion.isEmpty() || correo.isEmpty() ||
-            celular.isEmpty() || direccion.isEmpty() || contrasena.isEmpty() || confirmarContrasena.isEmpty()) {
-            mostrarMensaje("Por favor, completa todos los campos del formulario.", true);
+        // 1. Detección y marcado visual de campos vacíos obligatorios
+        boolean hayCamposVacios = false;
+        if (nombre.isEmpty()) {
+            marcarError(campoNombre, lblNombre);
+            hayCamposVacios = true;
+        }
+        if (identificacion.isEmpty()) {
+            marcarError(campoIdentificacion, lblIdentificacion);
+            hayCamposVacios = true;
+        }
+        if (correo.isEmpty()) {
+            marcarError(campoCorreo, lblCorreo);
+            hayCamposVacios = true;
+        }
+        if (celular.isEmpty()) {
+            marcarError(campoCelular, lblCelular);
+            hayCamposVacios = true;
+        }
+        if (direccion.isEmpty()) {
+            marcarError(campoDireccion, lblDireccion);
+            hayCamposVacios = true;
+        }
+        if (contrasena.isEmpty()) {
+            marcarError(campoContrasena, lblContrasena);
+            hayCamposVacios = true;
+        }
+        if (confirmarContrasena.isEmpty()) {
+            marcarError(campoConfirmarContrasena, lblConfirmarContrasena);
+            hayCamposVacios = true;
+        }
+
+        if (hayCamposVacios) {
+            mostrarMensaje("Por favor, completa los campos requeridos marcados en rojo.", true);
             return;
         }
 
-        // 2. Validación de formato de correo electrónico
-        if (!esCorreoValido(correo)) {
-            mostrarMensaje("El correo electrónico ingresado no tiene un formato válido.", true);
+        // 2. Validación de longitud mínima de nombre
+        if (nombre.length() < 3) {
+            marcarError(campoNombre, lblNombre);
+            mostrarMensaje("El nombre completo debe tener al menos 3 caracteres.", true);
             return;
         }
 
-        // 3. Validación de coincidencia de contraseñas
-        if (!contrasena.equals(confirmarContrasena)) {
-            mostrarMensaje("Las contraseñas no coinciden. Por favor verifícalas.", true);
+        // 3. Validación de longitud de número de identificación (mínimo 5 dígitos)
+        if (identificacion.length() < 5) {
+            marcarError(campoIdentificacion, lblIdentificacion);
+            mostrarMensaje("El número de identificación debe tener al menos 5 dígitos.", true);
             return;
         }
 
-        // 4. Validación de longitud mínima de contraseña
-        if (contrasena.length() < 4) {
-            mostrarMensaje("La contraseña debe tener al menos 4 caracteres.", true);
-            return;
-        }
-
-        // 5. Validación de no duplicidad de correo
-        if (gestorUsuarios.existeCorreo(correo)) {
-            mostrarMensaje("El correo electrónico ya se encuentra registrado.", true);
-            return;
-        }
-
-        // 6. Validación de no duplicidad de número de identificación
+        // 4. Validación de no duplicidad de número de identificación
         if (gestorUsuarios.existeIdentificacion(identificacion)) {
+            marcarError(campoIdentificacion, lblIdentificacion);
             mostrarMensaje("El número de identificación ya se encuentra registrado.", true);
             return;
         }
 
-        // 7. Simulación asíncrona de guardado con PauseTransition
+        // 5. Validación de formato de correo electrónico
+        if (!esCorreoValido(correo)) {
+            marcarError(campoCorreo, lblCorreo);
+            mostrarMensaje("El correo electrónico ingresado no tiene un formato válido.", true);
+            return;
+        }
+
+        // 6. Validación de no duplicidad de correo
+        if (gestorUsuarios.existeCorreo(correo)) {
+            marcarError(campoCorreo, lblCorreo);
+            mostrarMensaje("El correo electrónico ya se encuentra registrado.", true);
+            return;
+        }
+
+        // 7. Validación de número de celular (mínimo 10 dígitos)
+        if (celular.length() < 10) {
+            marcarError(campoCelular, lblCelular);
+            mostrarMensaje("El número de celular debe contener 10 dígitos.", true);
+            return;
+        }
+
+        // 8. Validación de longitud mínima de contraseña
+        if (contrasena.length() < 4) {
+            marcarError(campoContrasena, lblContrasena);
+            mostrarMensaje("La contraseña debe tener al menos 4 caracteres.", true);
+            return;
+        }
+
+        // 9. Validación de coincidencia de contraseñas
+        if (!contrasena.equals(confirmarContrasena)) {
+            marcarError(campoContrasena, lblContrasena);
+            marcarError(campoConfirmarContrasena, lblConfirmarContrasena);
+            mostrarMensaje("Las contraseñas no coinciden. Por favor verifícalas.", true);
+            return;
+        }
+
+        // 10. Simulación asíncrona de guardado con PauseTransition
         mostrarCargando();
         limpiarMensaje();
 
@@ -183,6 +265,156 @@ public class RegistroController {
     // =========================================================================
     // 5. LÓGICA DE NEGOCIO Y MÉTODOS AUXILIARES (Validaciones y feedback)
     // =========================================================================
+    /**
+     * Configura filtros de entrada (TextFormatter) para restringir caracteres permitidos:
+     * - Nombre: solo letras y espacios.
+     * - Identificación: solo números (máximo 15 dígitos).
+     * - Celular: solo números (máximo 10 dígitos).
+     */
+    private void configurarFiltrosTexto() {
+        // Filtro para Nombre Completo: solo letras alfabéticas (con tildes/ñ) y espacios
+        UnaryOperator<TextFormatter.Change> filtroLetras = cambio -> {
+            String nuevoTexto = cambio.getControlNewText();
+            if (nuevoTexto.matches("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s]*$")) {
+                return cambio;
+            }
+            return null; // Rechazar caracteres no permitidos (ej. dígitos o símbolos)
+        };
+        campoNombre.setTextFormatter(new TextFormatter<>(filtroLetras));
+
+        // Filtro para Identificación: solo dígitos numéricos (hasta 15 caracteres)
+        UnaryOperator<TextFormatter.Change> filtroDigitosIdentificacion = cambio -> {
+            String nuevoTexto = cambio.getControlNewText();
+            if (nuevoTexto.matches("^\\d*$") && nuevoTexto.length() <= 15) {
+                return cambio;
+            }
+            return null; // Rechazar letras o caracteres especiales
+        };
+        campoIdentificacion.setTextFormatter(new TextFormatter<>(filtroDigitosIdentificacion));
+
+        // Filtro para Celular: solo dígitos numéricos (hasta 10 dígitos estándar)
+        UnaryOperator<TextFormatter.Change> filtroDigitosCelular = cambio -> {
+            String nuevoTexto = cambio.getControlNewText();
+            if (nuevoTexto.matches("^\\d*$") && nuevoTexto.length() <= 10) {
+                return cambio;
+            }
+            return null; // Rechazar letras o caracteres especiales
+        };
+        campoCelular.setTextFormatter(new TextFormatter<>(filtroDigitosCelular));
+    }
+
+    /**
+     * Configura escuchadores de cambios (listeners) en tiempo real:
+     * - Limpia automáticamente el resaltado de error al comenzar a escribir.
+     * - Compara las contraseñas en tiempo real a medida que el usuario escribe.
+     */
+    private void configurarValidacionEnTiempoReal() {
+        // Limpieza de error en tiempo real para campos individuales
+        campoNombre.textProperty().addListener((obs, oldV, newV) -> {
+            limpiarError(campoNombre, lblNombre);
+            limpiarMensajeSiEsGeneral();
+        });
+
+        campoIdentificacion.textProperty().addListener((obs, oldV, newV) -> {
+            limpiarError(campoIdentificacion, lblIdentificacion);
+            limpiarMensajeSiEsGeneral();
+        });
+
+        campoCorreo.textProperty().addListener((obs, oldV, newV) -> {
+            limpiarError(campoCorreo, lblCorreo);
+            limpiarMensajeSiEsGeneral();
+        });
+
+        campoCelular.textProperty().addListener((obs, oldV, newV) -> {
+            limpiarError(campoCelular, lblCelular);
+            limpiarMensajeSiEsGeneral();
+        });
+
+        campoDireccion.textProperty().addListener((obs, oldV, newV) -> {
+            limpiarError(campoDireccion, lblDireccion);
+            limpiarMensajeSiEsGeneral();
+        });
+
+        // Validación y comparación de contraseñas en tiempo real
+        campoContrasena.textProperty().addListener((obs, oldV, newV) -> validarContrasenasEnTiempoReal());
+        campoConfirmarContrasena.textProperty().addListener((obs, oldV, newV) -> validarContrasenasEnTiempoReal());
+    }
+
+    /**
+     * Compara las contraseñas en tiempo real mientras el usuario escribe.
+     */
+    private void validarContrasenasEnTiempoReal() {
+        String pass1 = campoContrasena.getText() != null ? campoContrasena.getText() : "";
+        String pass2 = campoConfirmarContrasena.getText() != null ? campoConfirmarContrasena.getText() : "";
+
+        // Si el campo de confirmación está vacío, no se marca error aún (usuario no ha llegado a confirmar)
+        if (pass2.isEmpty()) {
+            limpiarError(campoContrasena, lblContrasena);
+            limpiarError(campoConfirmarContrasena, lblConfirmarContrasena);
+            removerValido(campoContrasena);
+            removerValido(campoConfirmarContrasena);
+            if ("Las contraseñas no coinciden.".equals(etiquetaMensaje.getText())) {
+                limpiarMensaje();
+            }
+            return;
+        }
+
+        // Si ya hay texto en confirmación, comparamos en tiempo real
+        if (pass1.equals(pass2)) {
+            limpiarError(campoContrasena, lblContrasena);
+            limpiarError(campoConfirmarContrasena, lblConfirmarContrasena);
+            marcarValido(campoContrasena);
+            marcarValido(campoConfirmarContrasena);
+            if ("Las contraseñas no coinciden.".equals(etiquetaMensaje.getText())) {
+                limpiarMensaje();
+            }
+        } else {
+            removerValido(campoContrasena);
+            removerValido(campoConfirmarContrasena);
+            marcarError(campoConfirmarContrasena, lblConfirmarContrasena);
+            mostrarMensaje("Las contraseñas no coinciden.", true);
+        }
+    }
+
+    private void marcarError(TextInputControl campo, Label etiqueta) {
+        if (campo != null) {
+            removerValido(campo);
+            if (!campo.getStyleClass().contains("campo-error")) {
+                campo.getStyleClass().add("campo-error");
+            }
+        }
+        if (etiqueta != null && !etiqueta.getStyleClass().contains("etiqueta-campo-error")) {
+            etiqueta.getStyleClass().add("etiqueta-campo-error");
+        }
+    }
+
+    private void limpiarError(TextInputControl campo, Label etiqueta) {
+        if (campo != null) {
+            campo.getStyleClass().remove("campo-error");
+        }
+        if (etiqueta != null) {
+            etiqueta.getStyleClass().remove("etiqueta-campo-error");
+        }
+    }
+
+    private void marcarValido(TextInputControl campo) {
+        if (campo != null && !campo.getStyleClass().contains("campo-valido")) {
+            campo.getStyleClass().add("campo-valido");
+        }
+    }
+
+    private void removerValido(TextInputControl campo) {
+        if (campo != null) {
+            campo.getStyleClass().remove("campo-valido");
+        }
+    }
+
+    private void limpiarMensajeSiEsGeneral() {
+        if (etiquetaMensaje != null && "Por favor, completa los campos requeridos marcados en rojo.".equals(etiquetaMensaje.getText())) {
+            limpiarMensaje();
+        }
+    }
+
     private boolean esCorreoValido(String correo) {
         return correo != null && PATRON_CORREO.matcher(correo).matches();
     }

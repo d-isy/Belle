@@ -116,18 +116,18 @@
                         <!-- Título -->
                         <Label text="Iniciar sesión" styleClass="titulo-formulario" />
 
-                        <!-- Campo Usuario -->
+                        <!-- Campo Usuario / Correo Electrónico -->
                         <VBox spacing="6" alignment="CENTER_LEFT" maxWidth="Infinity">
-                            <Label text="Usuario:" styleClass="etiqueta-campo" />
+                            <Label fx:id="etiquetaUsuario" text="Usuario / Correo Electrónico:" styleClass="etiqueta-campo" />
                             <TextField fx:id="campoUsuario"
-                                       promptText="Correo electrónico o 'admin'"
+                                       promptText="Correo registrado o 'admin'"
                                        styleClass="campo-texto"
                                        maxWidth="Infinity" />
                         </VBox>
 
                         <!-- Campo Clave -->
                         <VBox spacing="6" alignment="CENTER_LEFT" maxWidth="Infinity">
-                            <Label text="Clave:" styleClass="etiqueta-campo" />
+                            <Label fx:id="etiquetaClave" text="Clave:" styleClass="etiqueta-campo" />
                             <PasswordField fx:id="campoClave"
                                            promptText="Contraseña"
                                            styleClass="campo-texto"

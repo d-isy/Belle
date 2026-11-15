@@ -130,6 +130,19 @@ public class GestorUsuarios {
     }
 
     /**
+     * Elimina un usuario por su identificador único.
+     */
+    public synchronized boolean eliminar(String id) {
+        if (id == null) return false;
+        List<Usuario> lista = listar();
+        boolean removido = lista.removeIf(u -> id.equalsIgnoreCase(u.getId()));
+        if (removido) {
+            return guardarTodos(lista);
+        }
+        return false;
+    }
+
+    /**
      * Valida credenciales según la regla del proyecto:
      * El campo 'Usuario' valida ÚNICAMENTE contra el Correo Electrónico registrado del usuario,
      * además de permitir el acceso directo con el usuario 'admin' configurado para el Administrador.

@@ -214,3 +214,66 @@ Para resaltar errores, se agregan o remueven dinámicamente clases CSS en la lis
 * `.campo-error`: Aplica `-fx-border-color: #D32F2F; -fx-border-width: 2px;`.
 * `.etiqueta-campo-error`: Aplica `-fx-text-fill: #D32F2F;`.
 * `.campo-valido`: Aplica `-fx-border-color: #2E7D32; -fx-border-width: 2px;`.
+
+---
+
+## 6. Columna de Acciones en `TableView` (`TableCell<T, Void>` con `HBox`)
+
+En las tablas de administración de Figma (Productos y Órdenes), cada fila cuenta con dos acciones en la columna final: **Editar** (icono de lápiz) y **Eliminar** (icono de caneca/remove).
+
+### ¿Cómo renderizar botones interactivos por fila en JavaFX?
+Se crea una columna con tipo `Void` (`TableColumn<Producto, Void>`) y se define un `CellFactory` personalizado que instancie los botones y los asocie al objeto correspondiente a esa fila mediante `getIndex()`:
+
+```java
+colProdAcciones.setCellFactory(col -> new TableCell<Producto, Void>() {
+    private final Button btnEditar = new Button();
+    private final Button btnEliminar = new Button();
+    private final HBox contenedor = new HBox(8, btnEditar, btnEliminar);
+
+    {
+        contenedor.setAlignment(Pos.CENTER);
+        btnEditar.setGraphic(crearIcono("pencil.png"));
+        btnEliminar.setGraphic(crearIcono("remove.png"));
+
+        // Al presionar editar, se obtiene el ítem del modelo de esa fila
+        btnEditar.setOnAction(e -> {
+            Producto p = getTableView().getItems().get(getIndex());
+            abrirModalEditarProducto(p);
+        });
+
+        btnEliminar.setOnAction(e -> {
+            Producto p = getTableView().getItems().get(getIndex());
+            abrirModalEliminarProducto(p);
+        });
+    }
+
+    @Override
+    protected void updateItem(Void item, boolean empty) {
+        super.updateItem(item, empty);
+        if (empty) {
+            setGraphic(null);
+        } else {
+            setGraphic(contenedor);
+        }
+    }
+});
+```
+
+---
+
+## 7. Búsqueda y Filtrado Reactivo en Tiempo Real
+
+Para no requerir que el usuario presione un botón de "Buscar", JavaFX permite escuchar las modificaciones del texto del buscador en vivo:
+
+```java
+campoBusqueda.textProperty().addListener((obs, textoAnterior, textoNuevo) -> {
+    aplicarFiltrosActuales();
+});
+```
+
+Al dispararse el evento, se consulta el gestor de persistencia combinando:
+1. El texto tecleado (`contains(toLowerCase())` contra ID, Nombre o Categoría).
+2. La categoría seleccionada en el acordeón lateral.
+3. El estado seleccionado (Disponible o Agotado).
+
+La lista resultante se asigna a la tabla mediante `tablaProductos.setItems(FXCollections.observableArrayList(listaFiltrada))`, actualizando la vista y el contador de registros de manera instantánea.

@@ -46,7 +46,7 @@ Dentro de la raíz del paquete `com.mycompany.belle_store` encontramos:
 | `com.mycompany.belle_store.modelos` | Clases POJO simples que representan los datos del negocio (sin lógica de UI). | `Usuario.java`, `Producto.java`, `Orden.java`, `ItemOrden.java` |
 | `com.mycompany.belle_store.persistencia` | Lectura, escritura y filtrado de datos contra archivos JSON mediante Google Gson. | `ConfiguracionRutas.java`, `GestorUsuarios.java`, `GestorProductos.java`, `GestorOrdenes.java`, `SeedDatos.java` |
 | `com.mycompany.belle_store.sesion` | Almacenamiento en memoria de la identidad del usuario actualmente autenticado. | `SesionActual.java` |
-| `com.mycompany.belle_store.controladores` | Controladores de interfaz que enlazan los elementos visuales declarados en los archivos FXML con las operaciones del sistema. *(Se implementarán en las Fases 2, 3 y 4)* | `LoginController`, `RegistroController`, `AdminDashboardController`, `ClientePlaceholderController` |
+| `com.mycompany.belle_store.controladores` | Controladores de interfaz que enlazan los elementos visuales declarados en los archivos FXML con las operaciones del sistema. | `LoginController`, `RegistroController`, `AdminDashboardController`, `ClientePlaceholderController` |
 
 ---
 

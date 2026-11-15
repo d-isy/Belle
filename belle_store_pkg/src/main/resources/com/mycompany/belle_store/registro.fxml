@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/13"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.mycompany.belle_store.controladores.RegistroController"
+            prefWidth="1280.0" prefHeight="768.0"
+            stylesheets="@css/estilos.css">
+
+    <!-- ========================================================================= -->
+    <!-- CABECERA GLOBAL (Header Belle Store)                                      -->
+    <!-- ========================================================================= -->
+    <top>
+        <HBox styleClass="cabecera-global" alignment="CENTER_LEFT" spacing="20">
+            <!-- Marca / Logo -->
+            <Label text="Belle store" styleClass="logo-belle" onMouseClicked="#irALogin" style="-fx-cursor: hand;" />
+
+            <!-- Espaciador flexible -->
+            <Region HBox.hgrow="ALWAYS" />
+
+            <!-- Enlaces de navegación central -->
+            <HBox alignment="CENTER" spacing="25">
+                <Label text="Hombre" styleClass="nav-link" />
+                <Label text="Mujer" styleClass="nav-link" />
+                <Label text="Accesorios" styleClass="nav-link" />
+            </HBox>
+
+            <!-- Espaciador flexible -->
+            <Region HBox.hgrow="ALWAYS" />
+
+            <!-- Iconos de acción a la derecha -->
+            <HBox alignment="CENTER_RIGHT" spacing="18">
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/search.png" />
+                    </image>
+                </ImageView>
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/heart.png" />
+                    </image>
+                </ImageView>
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/cart.png" />
+                    </image>
+                </ImageView>
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/menu.png" />
+                    </image>
+                </ImageView>
+            </HBox>
+        </HBox>
+    </top>
+
+    <!-- ========================================================================= -->
+    <!-- CONTENIDO PRINCIPAL: Formulario de Registro Centrado (Figma: 104:521)    -->
+    <!-- ========================================================================= -->
+    <center>
+        <ScrollPane fitToWidth="true"
+                    style="-fx-background: #FFFFFF; -fx-background-color: #FFFFFF; -fx-border-color: transparent;">
+            <content>
+                <StackPane alignment="CENTER">
+                    <padding>
+                        <Insets top="30" right="40" bottom="40" left="40" />
+                    </padding>
+                    <VBox styleClass="tarjeta-formulario"
+                          maxWidth="680" spacing="16"
+                          alignment="CENTER">
+
+                        <!-- Título Oficial de Figma -->
+                        <Label text="REGISTRO" styleClass="titulo-formulario" />
+
+                        <!-- 1. Campo: Nombre Completo -->
+                        <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
+                            <Label text="Nombre Completo:" styleClass="etiqueta-campo" />
+                            <TextField fx:id="campoNombre"
+                                       promptText="Ej. Carlos Mendoza"
+                                       styleClass="campo-texto"
+                                       maxWidth="Infinity" />
+                        </VBox>
+
+                        <!-- 2. Campo: Número de Identificación -->
+                        <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
+                            <Label text="Número de Identificación:" styleClass="etiqueta-campo" />
+                            <TextField fx:id="campoIdentificacion"
+                                       promptText="Ej. 1020304050"
+                                       styleClass="campo-texto"
+                                       maxWidth="Infinity" />
+                        </VBox>
+
+                        <!-- 3. Campo: Correo Electrónico -->
+                        <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
+                            <Label text="Correo Electrónico:" styleClass="etiqueta-campo" />
+                            <TextField fx:id="campoCorreo"
+                                       promptText="ejemplo@correo.com"
+                                       styleClass="campo-texto"
+                                       maxWidth="Infinity" />
+                        </VBox>
+
+                        <!-- 4. Campo: Número de Celular -->
+                        <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
+                            <Label text="Número de Celular:" styleClass="etiqueta-campo" />
+                            <TextField fx:id="campoCelular"
+                                       promptText="Ej. 3001234567"
+                                       styleClass="campo-texto"
+                                       maxWidth="Infinity" />
+                        </VBox>
+
+                        <!-- 5. Campo: Dirección -->
+                        <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
+                            <Label text="Dirección:" styleClass="etiqueta-campo" />
+                            <TextField fx:id="campoDireccion"
+                                       promptText="Ej. Carrera 15 # 45 - 20"
+                                       styleClass="campo-texto"
+                                       maxWidth="Infinity" />
+                        </VBox>
+
+                        <!-- 6. Campo: Contraseña -->
+                        <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
+                            <Label text="Contraseña:" styleClass="etiqueta-campo" />
+                            <PasswordField fx:id="campoContrasena"
+                                           promptText="Crea una contraseña segura"
+                                           styleClass="campo-texto"
+                                           maxWidth="Infinity" />
+                        </VBox>
+
+                        <!-- 7. Campo: Confirmar Contraseña -->
+                        <VBox spacing="5" alignment="CENTER_LEFT" maxWidth="Infinity">
+                            <Label text="Confirmar Contraseña:" styleClass="etiqueta-campo" />
+                            <PasswordField fx:id="campoConfirmarContrasena"
+                                           promptText="Repite tu contraseña"
+                                           styleClass="campo-texto"
+                                           maxWidth="Infinity"
+                                           onAction="#manejarRegistro" />
+                        </VBox>
+
+                        <!-- Mensaje de retroalimentación de error/éxito -->
+                        <Label fx:id="etiquetaMensaje"
+                               styleClass="mensaje-error"
+                               wrapText="true"
+                               visible="false"
+                               managed="false" />
+
+                        <!-- Indicador de guardado asíncrono -->
+                        <HBox fx:id="contenedorCargando"
+                              alignment="CENTER" spacing="10"
+                              visible="false" managed="false">
+                            <ProgressIndicator prefWidth="24" prefHeight="24" />
+                            <Label text="Registrando usuario..." styleClass="etiqueta-cargando" />
+                        </HBox>
+
+                        <!-- Botón REGISTRARSE (Figma: Texto en Mayúsculas y fondo #666666) -->
+                        <Button fx:id="botonRegistrarse"
+                                text="REGISTRARSE"
+                                styleClass="boton-primario"
+                                maxWidth="Infinity"
+                                onAction="#manejarRegistro" />
+
+                        <!-- Enlace de Retorno al Login -->
+                        <HBox alignment="CENTER" spacing="6">
+                            <Label text="¿Ya tienes una cuenta?" style="-fx-font-size: 15px; -fx-text-fill: #4D4D4D;" />
+                            <Hyperlink fx:id="enlaceLogin"
+                                       text="Inicia sesión"
+                                       styleClass="enlace-registro"
+                                       onAction="#irALogin" />
+                        </HBox>
+                    </VBox>
+                </StackPane>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

@@ -1,4 +1,6 @@
 docs/agentes
+# Datos de ejecución (se generan al arrancar con SeedDatos; incluyen imágenes importadas)
+belle_store_pkg/datos/
 target/
 pom.xml.tag
 pom.xml.releaseBackup

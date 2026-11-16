@@ -3,6 +3,7 @@ package com.mycompany.belle_store.controladores;
 import com.mycompany.belle_store.App;
 import com.mycompany.belle_store.modelos.Usuario;
 import com.mycompany.belle_store.persistencia.GestorUsuarios;
+import com.mycompany.belle_store.validacion.Validaciones;
 import javafx.animation.PauseTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -18,7 +19,6 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 import java.util.function.UnaryOperator;
-import java.util.regex.Pattern;
 
 /**
  * Controlador de la vista de Registro de Clientes de Belle Store.
@@ -88,10 +88,6 @@ public class RegistroController {
     // =========================================================================
     private final GestorUsuarios gestorUsuarios = new GestorUsuarios();
 
-    // Patrón didáctico de validación de formato de correo electrónico
-    private static final Pattern PATRON_CORREO =
-            Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
-
     // =========================================================================
     // 3. INICIALIZACIÓN (initialize y configuración inicial)
     // =========================================================================
@@ -156,14 +152,14 @@ public class RegistroController {
         }
 
         // 2. Validación de longitud mínima de nombre
-        if (nombre.length() < 3) {
+        if (!Validaciones.esNombreValido(nombre)) {
             marcarError(campoNombre, lblNombre);
             mostrarMensaje("El nombre completo debe tener al menos 3 caracteres.", true);
             return;
         }
 
         // 3. Validación de longitud de número de identificación (mínimo 5 dígitos)
-        if (identificacion.length() < 5) {
+        if (!Validaciones.esIdentificacionValida(identificacion)) {
             marcarError(campoIdentificacion, lblIdentificacion);
             mostrarMensaje("El número de identificación debe tener al menos 5 dígitos.", true);
             return;
@@ -191,14 +187,14 @@ public class RegistroController {
         }
 
         // 7. Validación de número de celular (mínimo 10 dígitos)
-        if (celular.length() < 10) {
+        if (!Validaciones.esCelularValido(celular)) {
             marcarError(campoCelular, lblCelular);
             mostrarMensaje("El número de celular debe contener 10 dígitos.", true);
             return;
         }
 
         // 8. Validación de longitud mínima de contraseña
-        if (contrasena.length() < 4) {
+        if (!Validaciones.esContrasenaValida(contrasena)) {
             marcarError(campoContrasena, lblContrasena);
             mostrarMensaje("La contraseña debe tener al menos 4 caracteres.", true);
             return;
@@ -275,7 +271,7 @@ public class RegistroController {
         // Filtro para Nombre Completo: solo letras alfabéticas (con tildes/ñ) y espacios
         UnaryOperator<TextFormatter.Change> filtroLetras = cambio -> {
             String nuevoTexto = cambio.getControlNewText();
-            if (nuevoTexto.matches("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s]*$")) {
+            if (Validaciones.esTextoDeNombre(nuevoTexto)) {
                 return cambio;
             }
             return null; // Rechazar caracteres no permitidos (ej. dígitos o símbolos)
@@ -285,7 +281,7 @@ public class RegistroController {
         // Filtro para Identificación: solo dígitos numéricos (hasta 15 caracteres)
         UnaryOperator<TextFormatter.Change> filtroDigitosIdentificacion = cambio -> {
             String nuevoTexto = cambio.getControlNewText();
-            if (nuevoTexto.matches("^\\d*$") && nuevoTexto.length() <= 15) {
+            if (Validaciones.esSoloDigitos(nuevoTexto) && nuevoTexto.length() <= 15) {
                 return cambio;
             }
             return null; // Rechazar letras o caracteres especiales
@@ -295,7 +291,7 @@ public class RegistroController {
         // Filtro para Celular: solo dígitos numéricos (hasta 10 dígitos estándar)
         UnaryOperator<TextFormatter.Change> filtroDigitosCelular = cambio -> {
             String nuevoTexto = cambio.getControlNewText();
-            if (nuevoTexto.matches("^\\d*$") && nuevoTexto.length() <= 10) {
+            if (Validaciones.esSoloDigitos(nuevoTexto) && nuevoTexto.length() <= 10) {
                 return cambio;
             }
             return null; // Rechazar letras o caracteres especiales
@@ -416,7 +412,7 @@ public class RegistroController {
     }
 
     private boolean esCorreoValido(String correo) {
-        return correo != null && PATRON_CORREO.matcher(correo).matches();
+        return Validaciones.esCorreoValido(correo);
     }
 
     private void mostrarCargando() {

@@ -50,6 +50,10 @@
                 <version>3.2.5</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
+                    <!-- Las pruebas usan una carpeta de datos temporal: NUNCA tocan datos/ real -->
+                    <systemPropertyVariables>
+                        <belle.datos>${project.build.directory}/datos-pruebas</belle.datos>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>

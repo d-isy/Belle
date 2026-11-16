@@ -84,7 +84,7 @@ public class LoginController {
     @FXML
     private void manejarIngreso(ActionEvent event) {
         String usuarioTexto = campoUsuario.getText() != null ? campoUsuario.getText().trim() : "";
-        String claveTexto = campoClave.getText() != null ? campoClave.getText().trim() : "";
+        String claveTexto = campoClave.getText() != null ? campoClave.getText() : "";
 
         limpiarErroresVisuales();
 

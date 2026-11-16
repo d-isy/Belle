@@ -13,5 +13,6 @@ module com.mycompany.belle_store {
     exports com.mycompany.belle_store.modelos;
     exports com.mycompany.belle_store.persistencia;
     exports com.mycompany.belle_store.sesion;
-    exports com.mycompany.belle_store.controladores;
+    exports com.mycompany.belle_store.seguridad;
+    exports com.mycompany.belle_store.validacion;
 }

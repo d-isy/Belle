@@ -4,6 +4,7 @@ import com.mycompany.belle_store.modelos.ItemOrden;
 import com.mycompany.belle_store.modelos.Orden;
 import com.mycompany.belle_store.modelos.Producto;
 import com.mycompany.belle_store.modelos.Usuario;
+import com.mycompany.belle_store.seguridad.HashContrasena;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,7 +66,7 @@ public class SeedDatos {
                     "admin@belle.com",
                     "3000000000",
                     "Oficina Principal Belle",
-                    "admin123",
+                    HashContrasena.generarHash("admin123"),
                     Usuario.ROL_ADMIN
             ));
 
@@ -77,7 +78,7 @@ public class SeedDatos {
                     "maria@correo.com",
                     "3001234567",
                     "Cll 1 # 2",
-                    "cliente123",
+                    HashContrasena.generarHash("cliente123"),
                     Usuario.ROL_CLIENTE
             ));
 
@@ -102,10 +103,10 @@ public class SeedDatos {
                     200000.0
             ));
 
-            // Producto 2: Con URL externa para comprobar el soporte de imágenes remotas
+            // Producto 2: sin imagen oficial en Figma -> usa la imagen genérica (el admin puede enlazar otra)
             seed.add(new Producto(
                     "235",
-                    "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=200",
+                    "img/placeholder_producto.png",
                     "PANTALÓN NEGRO",
                     "PANTALONES",
                     5,
@@ -113,10 +114,10 @@ public class SeedDatos {
                     150000.0
             ));
 
-            // Producto 3: Producto agotado de la categoría Accesorios
+            // Producto 3 (sin imagen oficial en Figma): Producto agotado de la categoría Accesorios
             seed.add(new Producto(
                     "236",
-                    "img/bolso_cuero.png",
+                    "img/placeholder_producto.png",
                     "BOLSO DE CUERO",
                     "ACCESORIOS",
                     0,

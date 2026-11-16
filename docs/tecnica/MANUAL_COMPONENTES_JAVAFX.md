@@ -273,7 +273,41 @@ campoBusqueda.textProperty().addListener((obs, textoAnterior, textoNuevo) -> {
 
 Al dispararse el evento, se consulta el gestor de persistencia combinando:
 1. El texto tecleado (`contains(toLowerCase())` contra ID, Nombre o Categoría).
-2. La categoría seleccionada en el acordeón lateral.
+2. La categoría seleccionada en el panel lateral de filtros.
 3. El estado seleccionado (Disponible o Agotado).
 
 La lista resultante se asigna a la tabla mediante `tablaProductos.setItems(FXCollections.observableArrayList(listaFiltrada))`, actualizando la vista y el contador de registros de manera instantánea.
+
+
+---
+
+## 8. Selector de archivos (`FileChooser`) y vista previa
+
+El botón **Examinar...** del modal de producto abre el selector de archivos del sistema:
+
+```java
+FileChooser selector = new FileChooser();
+selector.getExtensionFilters().add(new FileChooser.ExtensionFilter(
+        "Imágenes", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp"));
+File elegido = selector.showOpenDialog(ventanaPropietaria);
+if (elegido != null) {
+    // Se COPIA a datos/imagenes/ para que el producto siga funcionando aunque el original se mueva
+    txtImagen.setText(GestorImagenes.importarImagen(elegido)); // -> "imagenes/foto.png"
+}
+```
+
+La vista previa es un `ImageView` que se actualiza con un *listener* sobre `txtImagen.textProperty()`. Si la imagen no existe o la carga falla (`Image.errorProperty()`), se muestra la imagen genérica.
+
+## 9. Validar sin cerrar un `Dialog`
+
+Para impedir que el botón *Guardar* cierre el diálogo cuando hay errores, se consume el evento antes de que el diálogo lo procese:
+
+```java
+Button ok = (Button) dialogo.getDialogPane().lookupButton(btnGuardar);
+ok.addEventFilter(ActionEvent.ACTION, evento -> {
+    if (hayErrores()) {
+        mostrarErrorEnRojo();
+        evento.consume(); // el diálogo permanece abierto
+    }
+});
+```

@@ -4,7 +4,14 @@ import java.io.File;
 
 /**
  * Clase utilitaria pedagógica para resolver la ubicación física de la carpeta 'datos/'
- * donde se almacenan los archivos JSON de persistencia.
+ * donde se almacenan los archivos JSON de persistencia (y las imágenes de productos).
+ *
+ * <p>Orden de resolución:</p>
+ * <ol>
+ *   <li>Propiedad del sistema {@code -Dbelle.datos=/ruta/absoluta} (la usan las pruebas).</li>
+ *   <li>Carpeta {@code datos/} junto al {@code pom.xml} del proyecto (directorio actual o {@code belle_store_pkg/}).</li>
+ *   <li>Carpeta {@code ~/.belle_store/datos} si no se encuentra el proyecto.</li>
+ * </ol>
  */
 public class ConfiguracionRutas {
 
@@ -15,7 +22,9 @@ public class ConfiguracionRutas {
     // =========================================================================
     // 2. ATRIBUTOS, SERVICIOS Y ESTADO
     // =========================================================================
+    public static final String PROPIEDAD_RUTA = "belle.datos";
     private static final String CARPETA_DATOS = "datos";
+    private static final String CARPETA_IMAGENES = "imagenes";
 
     // =========================================================================
     // 3. INICIALIZACIÓN (Constructor privado)
@@ -32,20 +41,25 @@ public class ConfiguracionRutas {
     // =========================================================================
     /**
      * Obtiene el directorio base 'datos/', asegurando su existencia en disco.
-     * Soporta ejecución tanto desde la raíz del proyecto como desde la subcarpeta belle_store_pkg.
      */
     public static File obtenerDirectorioDatos() {
-        File dir = new File(CARPETA_DATOS);
-        
-        // Si no existe pero existe belle_store_pkg, ajustar ruta
-        if (!dir.exists() && new File("belle_store_pkg").isDirectory()) {
+        File dir;
+        String configurada = System.getProperty(PROPIEDAD_RUTA);
+
+        if (configurada != null && !configurada.trim().isEmpty()) {
+            dir = new File(configurada.trim());
+        } else if (new File("pom.xml").isFile()) {
+            dir = new File(CARPETA_DATOS);
+        } else if (new File("belle_store_pkg", "pom.xml").isFile()) {
             dir = new File("belle_store_pkg", CARPETA_DATOS);
+        } else {
+            dir = new File(new File(System.getProperty("user.home"), ".belle_store"), CARPETA_DATOS);
         }
 
         if (!dir.exists()) {
             dir.mkdirs();
         }
-        return dir;
+        return dir.getAbsoluteFile();
     }
 
     /**
@@ -53,5 +67,16 @@ public class ConfiguracionRutas {
      */
     public static File obtenerArchivo(String nombreArchivo) {
         return new File(obtenerDirectorioDatos(), nombreArchivo);
+    }
+
+    /**
+     * Carpeta donde se copian las imágenes que el administrador asocia a los productos.
+     */
+    public static File obtenerDirectorioImagenes() {
+        File dir = new File(obtenerDirectorioDatos(), CARPETA_IMAGENES);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return dir;
     }
 }

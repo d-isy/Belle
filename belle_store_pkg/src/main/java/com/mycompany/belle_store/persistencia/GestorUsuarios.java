@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.mycompany.belle_store.modelos.Usuario;
+import com.mycompany.belle_store.seguridad.HashContrasena;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -91,6 +92,11 @@ public class GestorUsuarios {
             nuevoUsuario.setId("USR-" + (lista.size() + 1));
         }
 
+        // La contraseña SIEMPRE se almacena como hash PBKDF2 (nunca en texto plano)
+        if (!HashContrasena.esHash(nuevoUsuario.getContrasena())) {
+            nuevoUsuario.setContrasena(HashContrasena.generarHash(nuevoUsuario.getContrasena()));
+        }
+
         lista.add(nuevoUsuario);
         return guardarTodos(lista);
     }
@@ -156,7 +162,6 @@ public class GestorUsuarios {
             return null;
         }
         String idLimpio = identificador.trim();
-        String passLimpio = contrasena.trim();
 
         for (Usuario u : listar()) {
             boolean coincideIdentificador = false;
@@ -168,11 +173,41 @@ public class GestorUsuarios {
                 coincideIdentificador = true;
             }
 
-            if (coincideIdentificador && u.getContrasena() != null && u.getContrasena().equals(passLimpio)) {
+            if (coincideIdentificador && verificarYMigrar(u, contrasena)) {
                 return u;
             }
         }
 
         return null;
+    }
+
+    /**
+     * Verifica la contraseña contra el hash almacenado. Si el registro aún tiene una contraseña
+     * en texto plano (por ejemplo, añadida a mano en el JSON), se acepta una única vez y se
+     * reemplaza de inmediato por su hash PBKDF2 (migración transparente).
+     */
+    private boolean verificarYMigrar(Usuario u, String contrasena) {
+        String almacenada = u.getContrasena();
+        if (almacenada == null) {
+            return false;
+        }
+        if (HashContrasena.esHash(almacenada)) {
+            return HashContrasena.verificar(contrasena, almacenada);
+        }
+        if (almacenada.equals(contrasena)) {
+            synchronized (this) {
+                List<Usuario> lista = listar();
+                for (Usuario guardado : lista) {
+                    if (u.getId() != null && u.getId().equals(guardado.getId())) {
+                        guardado.setContrasena(HashContrasena.generarHash(contrasena));
+                        u.setContrasena(guardado.getContrasena());
+                        guardarTodos(lista);
+                        break;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }

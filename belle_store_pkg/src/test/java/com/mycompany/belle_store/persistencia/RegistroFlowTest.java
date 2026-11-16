@@ -2,6 +2,7 @@ package com.mycompany.belle_store.persistencia;
 
 import com.mycompany.belle_store.modelos.Usuario;
 import com.mycompany.belle_store.sesion.SesionActual;
+import com.mycompany.belle_store.validacion.Validaciones;
 import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -112,24 +113,20 @@ public class RegistroFlowTest {
     @Test
     @Order(5)
     public void testValidacionFiltrosTextoYPatrones() {
-        // Validación de nombres: solo letras y espacios permitidos
-        String patronNombre = "^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s]*$";
-        assertTrue("Carlos Mendoza".matches(patronNombre), "Nombre con letras válidas debe ser aceptado");
-        assertTrue("María José Peña".matches(patronNombre), "Nombre con tildes y ñ debe ser aceptado");
-        assertFalse("Carlos 123".matches(patronNombre), "Nombre con números no debe ser aceptado");
-        assertFalse("Carlos@Mendoza".matches(patronNombre), "Nombre con símbolos no debe ser aceptado");
+        // Se prueban las MISMAS reglas que usa el controlador (clase Validaciones)
+        assertTrue(Validaciones.esTextoDeNombre("Carlos Mendoza"));
+        assertTrue(Validaciones.esTextoDeNombre("María José Peña"), "Tildes y ñ deben aceptarse");
+        assertFalse(Validaciones.esTextoDeNombre("Carlos 123"), "Nombre con números debe rechazarse");
+        assertFalse(Validaciones.esTextoDeNombre("Carlos@Mendoza"), "Nombre con símbolos debe rechazarse");
 
-        // Validación de números de identificación y celular: solo dígitos
-        String patronDigitos = "^\\d*$";
-        assertTrue("1020304050".matches(patronDigitos), "Identificación numérica debe ser aceptada");
-        assertFalse("102030405A".matches(patronDigitos), "Identificación con letras debe ser rechazada");
-        assertTrue("3001234567".matches(patronDigitos), "Celular numérico debe ser aceptado");
-        assertFalse("300123456X".matches(patronDigitos), "Celular con letras debe ser rechazado");
+        assertTrue(Validaciones.esSoloDigitos("1020304050"));
+        assertFalse(Validaciones.esSoloDigitos("102030405A"), "Identificación con letras debe rechazarse");
+        assertTrue(Validaciones.esCelularValido("3001234567"));
+        assertFalse(Validaciones.esCelularValido("300123456X"));
+        assertFalse(Validaciones.esCelularValido("30012345"), "Celular de menos de 10 dígitos no es válido");
 
-        // Validación de correo electrónico
-        String patronCorreo = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-        assertTrue("cliente@correo.com".matches(patronCorreo));
-        assertFalse("correo-invalido.com".matches(patronCorreo));
-        assertFalse("cliente@".matches(patronCorreo));
+        assertTrue(Validaciones.esCorreoValido("cliente@correo.com"));
+        assertFalse(Validaciones.esCorreoValido("correo-invalido.com"));
+        assertFalse(Validaciones.esCorreoValido("cliente@"));
     }
 }

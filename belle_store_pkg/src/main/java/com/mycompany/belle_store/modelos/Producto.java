@@ -1,7 +1,6 @@
 package com.mycompany.belle_store.modelos;
 
-import java.text.NumberFormat;
-import java.util.Locale;
+import com.mycompany.belle_store.util.Formato;
 
 /**
  * Modelo de datos representativo de un Producto en Belle Store.
@@ -114,8 +113,7 @@ public class Producto {
      * Formatea el precio al estándar visual visto en Figma: "$200.000 COP".
      */
     public String getPrecioFormateado() {
-        NumberFormat formato = NumberFormat.getInstance(new Locale("es", "CO"));
-        return "$" + formato.format((long) this.precio) + " COP";
+        return Formato.moneda(this.precio);
     }
 
     @Override

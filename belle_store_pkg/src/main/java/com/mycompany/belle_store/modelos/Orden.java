@@ -1,9 +1,9 @@
 package com.mycompany.belle_store.modelos;
 
-import java.text.NumberFormat;
+import com.mycompany.belle_store.util.Formato;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Modelo representativo de una Orden de Compra en el sistema.
@@ -152,8 +152,7 @@ public class Orden {
      * Formatea el valor total al formato de Figma: "$200.000 COP".
      */
     public String getValorTotalFormateado() {
-        NumberFormat formato = NumberFormat.getInstance(new Locale("es", "CO"));
-        return "$" + formato.format((long) this.valorTotal) + " COP";
+        return Formato.moneda(this.valorTotal);
     }
 
     @Override

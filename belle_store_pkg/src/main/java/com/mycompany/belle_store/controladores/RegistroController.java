@@ -443,11 +443,8 @@ public class RegistroController {
         etiquetaMensaje.setVisible(true);
         etiquetaMensaje.setManaged(true);
 
-        if (esError) {
-            etiquetaMensaje.setStyle("-fx-text-fill: #D32F2F; -fx-font-size: 14px; -fx-font-weight: bold;");
-        } else {
-            etiquetaMensaje.setStyle("-fx-text-fill: #2E7D32; -fx-font-size: 14px; -fx-font-weight: bold;");
-        }
+        // El color y tamaño viven en estilos.css (.mensaje-error / .mensaje-exito)
+        etiquetaMensaje.getStyleClass().setAll("label", esError ? "mensaje-error" : "mensaje-exito");
     }
 
     private void limpiarMensaje() {

@@ -98,9 +98,9 @@
                                HBox.hgrow="ALWAYS" />
                 </HBox>
 
-                <!-- Botón Añadir Producto (+ Añadir Producto) -->
+                <!-- Botón Añadir Producto (Figma: "Añadir Producto +") -->
                 <Button fx:id="btnAnadirProducto"
-                        text="+ Añadir Producto"
+                        text="Añadir Producto +"
                         styleClass="boton-anadir-producto"
                         onAction="#abrirModalAnadirProducto" />
             </HBox>

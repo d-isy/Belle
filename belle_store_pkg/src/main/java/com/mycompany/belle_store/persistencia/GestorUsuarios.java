@@ -87,9 +87,9 @@ public class GestorUsuarios {
             return false;
         }
 
-        // Asignar ID pedagógico si no tiene uno
+        // Asignar ID pedagógico si no tiene uno (máximo existente + 1: nunca repite IDs tras eliminar)
         if (nuevoUsuario.getId() == null || nuevoUsuario.getId().trim().isEmpty()) {
-            nuevoUsuario.setId("USR-" + (lista.size() + 1));
+            nuevoUsuario.setId(generarSiguienteId(lista));
         }
 
         // La contraseña SIEMPRE se almacena como hash PBKDF2 (nunca en texto plano)
@@ -99,6 +99,22 @@ public class GestorUsuarios {
 
         lista.add(nuevoUsuario);
         return guardarTodos(lista);
+    }
+
+    /**
+     * Calcula el siguiente ID con formato {@code USR-n}: toma el mayor número usado por IDs de ese
+     * formato (ej. {@code USR-001} cuenta como 1) y suma 1. IDs especiales como {@code USR-ADMIN}
+     * no participan. Así, eliminar un usuario nunca provoca que el siguiente repita un ID existente.
+     */
+    private String generarSiguienteId(List<Usuario> lista) {
+        long maximo = 0;
+        for (Usuario u : lista) {
+            String id = u.getId();
+            if (id != null && id.toUpperCase().matches("USR-\\d+")) {
+                maximo = Math.max(maximo, Long.parseLong(id.substring(4)));
+            }
+        }
+        return "USR-" + (maximo + 1);
     }
 
     /**

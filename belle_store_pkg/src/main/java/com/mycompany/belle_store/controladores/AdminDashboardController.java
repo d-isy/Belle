@@ -9,7 +9,9 @@ import com.mycompany.belle_store.persistencia.GestorOrdenes;
 import com.mycompany.belle_store.persistencia.GestorProductos;
 import com.mycompany.belle_store.persistencia.GestorUsuarios;
 import com.mycompany.belle_store.sesion.SesionActual;
+import com.mycompany.belle_store.util.Formato;
 import com.mycompany.belle_store.validacion.Validaciones;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -98,7 +100,7 @@ public class AdminDashboardController {
     private TableColumn<Producto, String> colProdEstado;
 
     @FXML
-    private TableColumn<Producto, String> colProdPrecio;
+    private TableColumn<Producto, Double> colProdPrecio;
 
     @FXML
     private TableColumn<Producto, Void> colProdAcciones;
@@ -126,7 +128,7 @@ public class AdminDashboardController {
     private TableColumn<Orden, String> colOrdEstado;
 
     @FXML
-    private TableColumn<Orden, String> colOrdValorTotal;
+    private TableColumn<Orden, Double> colOrdValorTotal;
 
     @FXML
     private TableColumn<Orden, Void> colOrdAcciones;
@@ -204,6 +206,15 @@ public class AdminDashboardController {
     // Caché cédula -> nombre del cliente (se refresca en cada filtrado para no leer el JSON por cada celda)
     private Map<String, String> nombresClientes = new HashMap<>();
 
+    // Mensajes que se muestran cuando una tabla no tiene filas (estado vacío)
+    private final Label placeholderProductos = new Label();
+    private final Label placeholderOrdenes = new Label();
+
+    // Botones de los diálogos en español (el idioma por defecto depende del sistema operativo)
+    private static final ButtonType BTN_CANCELAR = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+    private static final ButtonType BTN_ELIMINAR = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
+    private static final ButtonType BTN_ACEPTAR = new ButtonType("Aceptar", ButtonBar.ButtonData.OK_DONE);
+
     // =========================================================================
     // 3. INICIALIZACIÓN (initialize y configuración inicial)
     // =========================================================================
@@ -218,6 +229,12 @@ public class AdminDashboardController {
         // 2. Configuración de columnas de las tablas
         configurarTablaProductos();
         configurarTablaOrdenes();
+
+        // Estado vacío de cada tabla
+        placeholderProductos.getStyleClass().add("placeholder-tabla");
+        placeholderOrdenes.getStyleClass().add("placeholder-tabla");
+        tablaProductos.setPlaceholder(placeholderProductos);
+        tablaOrdenes.setPlaceholder(placeholderOrdenes);
 
         // 3. Escuchador reactivo de búsqueda en tiempo real
         campoBusqueda.textProperty().addListener((obs, oldV, newV) -> aplicarFiltrosActuales());
@@ -403,9 +420,14 @@ public class AdminDashboardController {
         colProdEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
         colProdEstado.setCellFactory(col -> crearCellFactoryEstadoProducto());
 
-        // Formato monetario oficial de Figma
+        // Formato monetario oficial de Figma: la columna guarda el NÚMERO (para ordenar bien)
+        // y la celda solo cambia cómo se MUESTRA ("$200.000 COP").
         colProdPrecio.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getPrecioFormateado()));
+                new SimpleObjectProperty<>(cellData.getValue().getPrecio()));
+        colProdPrecio.setCellFactory(col -> crearCellFactoryMoneda());
+
+        // Los IDs se ordenan por valor numérico ("234" antes que "1000")
+        colProdId.setComparator(Formato::compararNumericoOTexto);
 
         colProdAcciones.setCellFactory(col -> crearCellFactoryAccionesProductos());
     }
@@ -430,7 +452,11 @@ public class AdminDashboardController {
         colOrdEstado.setCellFactory(col -> crearCellFactoryEstadoOrden());
 
         colOrdValorTotal.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getValorTotalFormateado()));
+                new SimpleObjectProperty<>(cellData.getValue().getValorTotal()));
+        colOrdValorTotal.setCellFactory(col -> crearCellFactoryMoneda());
+
+        // Los IDs se ordenan por valor numérico ("111" antes que "1000")
+        colOrdId.setComparator(Formato::compararNumericoOTexto);
 
         colOrdAcciones.setCellFactory(col -> crearCellFactoryAccionesOrdenes());
 
@@ -459,6 +485,13 @@ public class AdminDashboardController {
             List<Producto> filtrados = gestorProductos.filtrar(textoBusqueda, categoriaProdFiltro, estadoProdFiltro);
             tablaProductos.setItems(FXCollections.observableArrayList(filtrados));
             lblContadorRegistros.setText("Mostrando " + filtrados.size() + " producto(s)");
+
+            // Estado vacío: distingue "no hay datos" de "los filtros no encontraron nada"
+            boolean hayFiltro = !textoBusqueda.isEmpty()
+                    || !"TODAS".equals(categoriaProdFiltro) || !"TODOS".equals(estadoProdFiltro);
+            placeholderProductos.setText(hayFiltro
+                    ? "Ningún producto coincide con la búsqueda o los filtros."
+                    : "Aún no hay productos registrados. Usa \"Añadir Producto +\" para crear el primero.");
         } else {
             refrescarNombresClientes();
             String termino = textoBusqueda.toLowerCase();
@@ -473,6 +506,11 @@ public class AdminDashboardController {
 
             tablaOrdenes.setItems(FXCollections.observableArrayList(filtradas));
             lblContadorRegistros.setText("Mostrando " + filtradas.size() + " orden(es)");
+
+            boolean hayFiltro = !termino.isEmpty() || !"TODOS".equals(estadoOrdFiltro);
+            placeholderOrdenes.setText(hayFiltro
+                    ? "Ninguna orden coincide con la búsqueda o el filtro."
+                    : "Aún no hay órdenes registradas.");
         }
     }
 
@@ -552,6 +590,20 @@ public class AdminDashboardController {
     private Image imagenGenerica(double tamano) {
         String url = GestorImagenes.resolverUrl(GestorImagenes.PLACEHOLDER);
         return url != null ? new Image(url, tamano * 2, tamano * 2, true, true) : null;
+    }
+
+    /**
+     * Celda monetaria genérica: recibe el valor numérico de la columna y lo muestra como
+     * "$200.000 COP". Al ordenar, la tabla usa el número, no el texto.
+     */
+    private <S> TableCell<S, Double> crearCellFactoryMoneda() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(Double valor, boolean empty) {
+                super.updateItem(valor, empty);
+                setText(empty || valor == null ? null : Formato.moneda(valor));
+            }
+        };
     }
 
     private TableCell<Producto, String> crearCellFactoryEstadoProducto() {
@@ -693,7 +745,7 @@ public class AdminDashboardController {
         aplicarEstilosDialogo(dialogo);
 
         ButtonType btnGuardar = new ButtonType(esNuevo ? "Guardar" : "Actualizar", ButtonBar.ButtonData.OK_DONE);
-        dialogo.getDialogPane().getButtonTypes().addAll(btnGuardar, ButtonType.CANCEL);
+        dialogo.getDialogPane().getButtonTypes().addAll(btnGuardar, BTN_CANCELAR);
 
         TextField txtId = new TextField(esNuevo ? generarSiguienteIdProducto() : original.getId());
         txtId.setDisable(!esNuevo); // El ID es la clave única: no se edita
@@ -705,7 +757,7 @@ public class AdminDashboardController {
 
         TextField txtStock = new TextField(esNuevo ? "1" : String.valueOf(original.getStock()));
         Label lblEstado = new Label();
-        lblEstado.setStyle("-fx-font-weight: bold;");
+        lblEstado.getStyleClass().add("etiqueta-estado-dialogo");
         Runnable actualizarEstado = () -> {
             try {
                 int stock = Integer.parseInt(txtStock.getText().trim());
@@ -736,7 +788,7 @@ public class AdminDashboardController {
         actualizarVistaPrevia.run();
 
         Label lblError = new Label();
-        lblError.setStyle("-fx-text-fill: #D32F2F; -fx-font-weight: bold;");
+        lblError.getStyleClass().add("mensaje-error");
         lblError.setWrapText(true);
         lblError.setMaxWidth(380);
 
@@ -858,8 +910,9 @@ public class AdminDashboardController {
         alerta.setTitle("Confirmar eliminación");
         alerta.setHeaderText("¿Deseas eliminar este producto?");
         alerta.setContentText(producto.getNombre() + " (ID: " + producto.getId() + ")");
+        alerta.getButtonTypes().setAll(BTN_ELIMINAR, BTN_CANCELAR);
         Optional<ButtonType> respuesta = alerta.showAndWait();
-        if (respuesta.isPresent() && respuesta.get() == ButtonType.OK) {
+        if (respuesta.isPresent() && respuesta.get() == BTN_ELIMINAR) {
             if (gestorProductos.eliminar(producto.getId())) {
                 aplicarFiltrosActuales();
             } else {
@@ -878,7 +931,7 @@ public class AdminDashboardController {
         aplicarEstilosDialogo(dialogo);
 
         ButtonType btnActualizar = new ButtonType("Actualizar", ButtonBar.ButtonData.OK_DONE);
-        dialogo.getDialogPane().getButtonTypes().addAll(btnActualizar, ButtonType.CANCEL);
+        dialogo.getDialogPane().getButtonTypes().addAll(btnActualizar, BTN_CANCELAR);
 
         TextField txtId = new TextField(orden.getId());
         txtId.setDisable(true);
@@ -889,7 +942,7 @@ public class AdminDashboardController {
         cbEstado.setValue(orden.getEstado());
 
         Label lblError = new Label();
-        lblError.setStyle("-fx-text-fill: #D32F2F; -fx-font-weight: bold;");
+        lblError.getStyleClass().add("mensaje-error");
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -937,8 +990,9 @@ public class AdminDashboardController {
         alerta.setTitle("Confirmar eliminación de orden");
         alerta.setHeaderText("¿Deseas eliminar esta orden?");
         alerta.setContentText("Orden #" + orden.getId() + " del cliente " + orden.getClienteId());
+        alerta.getButtonTypes().setAll(BTN_ELIMINAR, BTN_CANCELAR);
         Optional<ButtonType> respuesta = alerta.showAndWait();
-        if (respuesta.isPresent() && respuesta.get() == ButtonType.OK) {
+        if (respuesta.isPresent() && respuesta.get() == BTN_ELIMINAR) {
             if (gestorOrdenes.eliminar(orden.getId())) {
                 aplicarFiltrosActuales();
             } else {
@@ -1019,6 +1073,7 @@ public class AdminDashboardController {
         alerta.setTitle(titulo);
         alerta.setHeaderText(null);
         alerta.setContentText(mensaje);
+        alerta.getButtonTypes().setAll(BTN_ACEPTAR);
         alerta.showAndWait();
     }
 

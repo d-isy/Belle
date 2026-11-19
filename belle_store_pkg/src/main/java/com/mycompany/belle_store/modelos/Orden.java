@@ -1,5 +1,6 @@
 package com.mycompany.belle_store.modelos;
 
+import com.google.gson.annotations.SerializedName;
 import com.mycompany.belle_store.util.Formato;
 
 import java.util.ArrayList;
@@ -8,6 +9,9 @@ import java.util.List;
 /**
  * Modelo representativo de una Orden de Compra en el sistema.
  * Mapea directamente las columnas de la vista Admin Órdenes en Figma.
+ *
+ * <p>{@code totalArticulos} y {@code valorTotal} se calculan siempre desde la lista
+ * de {@code articulos} para garantizar consistencia (una única fuente de verdad).</p>
  */
 public class Orden {
 
@@ -19,12 +23,15 @@ public class Orden {
     // 2. ATRIBUTOS, SERVICIOS Y ESTADO
     // =========================================================================
     private String id;
-    private String clienteId; // Número de identificación del cliente (ej. "28483")
+
+    // Número de identificación (cédula) del cliente (ej. "28483").
+    // alternate = {"clienteId"} mantiene compatibilidad al leer archivos Ordenes.json antiguos.
+    @SerializedName(value = "clienteIdentificacion", alternate = {"clienteId"})
+    private String clienteIdentificacion;
+
     private List<ItemOrden> articulos;
-    private int totalArticulos;
     private String direccion;
     private String estado; // "No Entregado", "Entregado", "Pendiente"
-    private double valorTotal;
     private String fecha;
 
     // =========================================================================
@@ -34,16 +41,14 @@ public class Orden {
         this.articulos = new ArrayList<>();
     }
 
-    public Orden(String id, String clienteId, List<ItemOrden> articulos,
-                 String direccion, String estado, double valorTotal, String fecha) {
+    public Orden(String id, String clienteIdentificacion, List<ItemOrden> articulos,
+                 String direccion, String estado, String fecha) {
         this.id = id;
-        this.clienteId = clienteId;
-        this.articulos = (articulos != null) ? articulos : new ArrayList<>();
+        this.clienteIdentificacion = clienteIdentificacion;
+        this.articulos = (articulos != null) ? new ArrayList<>(articulos) : new ArrayList<>();
         this.direccion = direccion;
         this.estado = estado;
-        this.valorTotal = valorTotal;
         this.fecha = fecha;
-        this.totalArticulos = calcularTotalArticulos();
     }
 
     // =========================================================================
@@ -61,32 +66,34 @@ public class Orden {
         this.id = id;
     }
 
-    public String getClienteId() {
-        return clienteId;
+    public String getClienteIdentificacion() {
+        return clienteIdentificacion;
     }
 
-    public void setClienteId(String clienteId) {
-        this.clienteId = clienteId;
+    public void setClienteIdentificacion(String clienteIdentificacion) {
+        this.clienteIdentificacion = clienteIdentificacion;
     }
 
     public List<ItemOrden> getArticulos() {
+        if (articulos == null) {
+            articulos = new ArrayList<>();
+        }
         return articulos;
     }
 
     public void setArticulos(List<ItemOrden> articulos) {
-        this.articulos = articulos;
-        this.totalArticulos = calcularTotalArticulos();
+        this.articulos = (articulos != null) ? new ArrayList<>(articulos) : new ArrayList<>();
     }
 
+    /**
+     * Cantidad total de unidades sumando todos los artículos de la orden.
+     */
     public int getTotalArticulos() {
-        if (totalArticulos <= 0 && articulos != null) {
-            totalArticulos = calcularTotalArticulos();
+        int total = 0;
+        for (ItemOrden item : getArticulos()) {
+            total += item.getCantidad();
         }
-        return totalArticulos;
-    }
-
-    public void setTotalArticulos(int totalArticulos) {
-        this.totalArticulos = totalArticulos;
+        return total;
     }
 
     public String getDireccion() {
@@ -105,12 +112,15 @@ public class Orden {
         this.estado = estado;
     }
 
+    /**
+     * Valor total de la orden calculado como la suma de los subtotales de sus artículos.
+     */
     public double getValorTotal() {
-        return valorTotal;
-    }
-
-    public void setValorTotal(double valorTotal) {
-        this.valorTotal = valorTotal;
+        double total = 0.0;
+        for (ItemOrden item : getArticulos()) {
+            total += item.getSubtotal();
+        }
+        return total;
     }
 
     public String getFecha() {
@@ -121,27 +131,19 @@ public class Orden {
         this.fecha = fecha;
     }
 
-    public int calcularTotalArticulos() {
-        if (articulos == null) return 0;
-        int total = 0;
-        for (ItemOrden item : articulos) {
-            total += item.getCantidad();
-        }
-        return total;
-    }
-
     /**
      * Retorna el texto para la celda de artículos:
      * "• Camisa - 1" o lista multilínea con viñetas.
      */
     public String getArticulosFormateados() {
-        if (articulos == null || articulos.isEmpty()) {
+        List<ItemOrden> lista = getArticulos();
+        if (lista.isEmpty()) {
             return "Sin artículos";
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < articulos.size(); i++) {
-            sb.append("• ").append(articulos.get(i).getDescripcionFormateada());
-            if (i < articulos.size() - 1) {
+        for (int i = 0; i < lista.size(); i++) {
+            sb.append("• ").append(lista.get(i).getDescripcionFormateada());
+            if (i < lista.size() - 1) {
                 sb.append("\n");
             }
         }
@@ -152,14 +154,14 @@ public class Orden {
      * Formatea el valor total al formato de Figma: "$200.000 COP".
      */
     public String getValorTotalFormateado() {
-        return Formato.moneda(this.valorTotal);
+        return Formato.moneda(getValorTotal());
     }
 
     @Override
     public String toString() {
         return "Orden{" +
                 "id='" + id + '\'' +
-                ", clienteId='" + clienteId + '\'' +
+                ", clienteIdentificacion='" + clienteIdentificacion + '\'' +
                 ", totalArticulos=" + getTotalArticulos() +
                 ", estado='" + estado + '\'' +
                 ", valorTotal=" + getValorTotalFormateado() +

@@ -52,7 +52,7 @@ public class FormatoYUsuariosTest {
         assertEquals("$0 COP", Formato.moneda(0));
         assertEquals("$1.250.000 COP", Formato.moneda(1250000.9), "Se trunca a pesos enteros");
         // Los modelos delegan en la misma utilidad
-        assertEquals("$180.000 COP", new Producto("1", "img/x.png", "X", "CAMISAS", 1, "DISPONIBLE", 180000.0).getPrecioFormateado());
+        assertEquals("$180.000 COP", new Producto("1", "img/x.png", "X", "CAMISAS", 1, 180000.0).getPrecioFormateado());
     }
 
     @Test

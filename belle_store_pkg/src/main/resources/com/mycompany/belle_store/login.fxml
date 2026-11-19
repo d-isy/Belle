@@ -122,7 +122,8 @@
                             <TextField fx:id="campoUsuario"
                                        promptText="Correo registrado o 'admin'"
                                        styleClass="campo-texto"
-                                       maxWidth="Infinity" />
+                                       maxWidth="Infinity"
+                                       onAction="#enfocarClave" />
                         </VBox>
 
                         <!-- Campo Clave -->

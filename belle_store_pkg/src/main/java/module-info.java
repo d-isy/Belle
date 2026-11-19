@@ -15,4 +15,5 @@ module com.mycompany.belle_store {
     exports com.mycompany.belle_store.sesion;
     exports com.mycompany.belle_store.seguridad;
     exports com.mycompany.belle_store.validacion;
+    exports com.mycompany.belle_store.util;
 }

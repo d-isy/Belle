@@ -3,27 +3,22 @@ package com.mycompany.belle_store.controladores;
 import com.mycompany.belle_store.App;
 import com.mycompany.belle_store.modelos.Orden;
 import com.mycompany.belle_store.modelos.Producto;
-import com.mycompany.belle_store.modelos.Usuario;
-import com.mycompany.belle_store.persistencia.GestorImagenes;
 import com.mycompany.belle_store.persistencia.GestorOrdenes;
 import com.mycompany.belle_store.persistencia.GestorProductos;
 import com.mycompany.belle_store.persistencia.GestorUsuarios;
 import com.mycompany.belle_store.sesion.SesionActual;
 import com.mycompany.belle_store.util.Formato;
-import com.mycompany.belle_store.validacion.Validaciones;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -34,14 +29,12 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -49,12 +42,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Controlador principal del Dashboard de Administrador de Belle Store.
- * Gestiona el catálogo de Productos, las Órdenes de Compra, búsqueda en tiempo real,
- * filtros laterales y operaciones CRUD mediante modales didácticos.
+ * Gestiona el catálogo de Productos, las Órdenes de Compra, búsqueda en tiempo real y filtros laterales.
+ * Los formularios modales se delegan en {@link DialogoProducto} y {@link DialogoOrden}.
  * Estructurado en 5 secciones estándar pedagógicas.
  */
 public class AdminDashboardController {
@@ -194,23 +186,19 @@ public class AdminDashboardController {
         ORDENES
     }
 
-    // Categorías oficiales del diseño de Figma (las mismas del filtro lateral)
-    private static final List<String> CATEGORIAS = Arrays.asList("CAMISAS", "PANTALONES", "ACCESORIOS");
-    private static final List<String> ESTADOS_ORDEN = Arrays.asList("No Entregado", "Entregado", "Pendiente");
-
     private ModoVista modoActual = ModoVista.PRODUCTOS;
     private String categoriaProdFiltro = "TODAS";
     private String estadoProdFiltro = "TODOS";
     private String estadoOrdFiltro = "TODOS";
 
-    // Caché cédula -> nombre del cliente (se refresca en cada filtrado para no leer el JSON por cada celda)
+    // Caché cédula -> nombre del cliente (se refresca al filtrar órdenes para no leer JSON por celda)
     private Map<String, String> nombresClientes = new HashMap<>();
 
-    // Mensajes que se muestran cuando una tabla no tiene filas (estado vacío)
+    // Mensajes de estado vacío para cada tabla
     private final Label placeholderProductos = new Label();
     private final Label placeholderOrdenes = new Label();
 
-    // Botones de los diálogos en español (el idioma por defecto depende del sistema operativo)
+    // Botones de confirmación y avisos en español
     private static final ButtonType BTN_CANCELAR = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
     private static final ButtonType BTN_ELIMINAR = new ButtonType("Eliminar", ButtonBar.ButtonData.OK_DONE);
     private static final ButtonType BTN_ACEPTAR = new ButtonType("Aceptar", ButtonBar.ButtonData.OK_DONE);
@@ -220,35 +208,27 @@ public class AdminDashboardController {
     // =========================================================================
     @FXML
     public void initialize() {
-        // 1. Control de acceso: Verificar que el usuario sea Administrador
-        if (!SesionActual.haySesionIniciada() || !SesionActual.esAdmin()) {
-            redirigirALogin();
+        // El control de acceso ya se valida antes de cargar esta vista en App.setRoot()
+        if (!SesionActual.esAdmin()) {
             return;
         }
 
-        // 2. Configuración de columnas de las tablas
         configurarTablaProductos();
         configurarTablaOrdenes();
 
-        // Estado vacío de cada tabla
         placeholderProductos.getStyleClass().add("placeholder-tabla");
         placeholderOrdenes.getStyleClass().add("placeholder-tabla");
         tablaProductos.setPlaceholder(placeholderProductos);
         tablaOrdenes.setPlaceholder(placeholderOrdenes);
 
-        // 3. Escuchador reactivo de búsqueda en tiempo real
         campoBusqueda.textProperty().addListener((obs, oldV, newV) -> aplicarFiltrosActuales());
 
-        // 4. Cargar datos iniciales y mostrar vista de Productos por defecto
         mostrarVistaProductos(null);
     }
 
     // =========================================================================
     // 4. EVENTOS DE INTERFAZ Y NAVEGACIÓN (Acciones de botones y filtros)
     // =========================================================================
-    /**
-     * Cambia la vista activa al modo Catálogo de Productos.
-     */
     @FXML
     public void mostrarVistaProductos(ActionEvent event) {
         modoActual = ModoVista.PRODUCTOS;
@@ -271,9 +251,6 @@ public class AdminDashboardController {
         aplicarFiltrosActuales();
     }
 
-    /**
-     * Cambia la vista activa al modo Órdenes de Compra.
-     */
     @FXML
     public void mostrarVistaOrdenes(ActionEvent event) {
         modoActual = ModoVista.ORDENES;
@@ -296,101 +273,49 @@ public class AdminDashboardController {
         aplicarFiltrosActuales();
     }
 
-    // --- Filtros de Categoría de Productos ---
+    /**
+     * Manejador unificado para los botones de filtro por Categoría de Productos.
+     * Lee el valor del filtro desde el atributo {@code userData} definido en el FXML.
+     */
     @FXML
-    public void filtrarCategoriaTodas(ActionEvent event) {
-        categoriaProdFiltro = "TODAS";
-        actualizarBotonFiltroActivo(btnCatTodas, Arrays.asList(btnCatTodas, btnCatCamisas, btnCatPantalones, btnCatAccesorios));
-        aplicarFiltrosActuales();
-    }
-
-    @FXML
-    public void filtrarCategoriaCamisas(ActionEvent event) {
-        categoriaProdFiltro = "CAMISAS";
-        actualizarBotonFiltroActivo(btnCatCamisas, Arrays.asList(btnCatTodas, btnCatCamisas, btnCatPantalones, btnCatAccesorios));
-        aplicarFiltrosActuales();
-    }
-
-    @FXML
-    public void filtrarCategoriaPantalones(ActionEvent event) {
-        categoriaProdFiltro = "PANTALONES";
-        actualizarBotonFiltroActivo(btnCatPantalones, Arrays.asList(btnCatTodas, btnCatCamisas, btnCatPantalones, btnCatAccesorios));
-        aplicarFiltrosActuales();
-    }
-
-    @FXML
-    public void filtrarCategoriaAccesorios(ActionEvent event) {
-        categoriaProdFiltro = "ACCESORIOS";
-        actualizarBotonFiltroActivo(btnCatAccesorios, Arrays.asList(btnCatTodas, btnCatCamisas, btnCatPantalones, btnCatAccesorios));
-        aplicarFiltrosActuales();
-    }
-
-    // --- Filtros de Estado de Productos ---
-    @FXML
-    public void filtrarEstadoProdTodos(ActionEvent event) {
-        estadoProdFiltro = "TODOS";
-        actualizarBotonFiltroActivo(btnEstProdTodos, Arrays.asList(btnEstProdTodos, btnEstProdDisponible, btnEstProdAgotado));
-        aplicarFiltrosActuales();
-    }
-
-    @FXML
-    public void filtrarEstadoProdDisponible(ActionEvent event) {
-        estadoProdFiltro = "DISPONIBLE";
-        actualizarBotonFiltroActivo(btnEstProdDisponible, Arrays.asList(btnEstProdTodos, btnEstProdDisponible, btnEstProdAgotado));
-        aplicarFiltrosActuales();
-    }
-
-    @FXML
-    public void filtrarEstadoProdAgotado(ActionEvent event) {
-        estadoProdFiltro = "AGOTADO";
-        actualizarBotonFiltroActivo(btnEstProdAgotado, Arrays.asList(btnEstProdTodos, btnEstProdDisponible, btnEstProdAgotado));
-        aplicarFiltrosActuales();
-    }
-
-    // --- Filtros de Estado de Órdenes ---
-    @FXML
-    public void filtrarEstadoOrdTodos(ActionEvent event) {
-        estadoOrdFiltro = "TODOS";
-        actualizarBotonFiltroActivo(btnEstOrdTodos, Arrays.asList(btnEstOrdTodos, btnEstOrdNoEntregado, btnEstOrdEntregado, btnEstOrdPendiente));
-        aplicarFiltrosActuales();
-    }
-
-    @FXML
-    public void filtrarEstadoOrdNoEntregado(ActionEvent event) {
-        estadoOrdFiltro = "No Entregado";
-        actualizarBotonFiltroActivo(btnEstOrdNoEntregado, Arrays.asList(btnEstOrdTodos, btnEstOrdNoEntregado, btnEstOrdEntregado, btnEstOrdPendiente));
-        aplicarFiltrosActuales();
-    }
-
-    @FXML
-    public void filtrarEstadoOrdEntregado(ActionEvent event) {
-        estadoOrdFiltro = "Entregado";
-        actualizarBotonFiltroActivo(btnEstOrdEntregado, Arrays.asList(btnEstOrdTodos, btnEstOrdNoEntregado, btnEstOrdEntregado, btnEstOrdPendiente));
-        aplicarFiltrosActuales();
-    }
-
-    @FXML
-    public void filtrarEstadoOrdPendiente(ActionEvent event) {
-        estadoOrdFiltro = "Pendiente";
-        actualizarBotonFiltroActivo(btnEstOrdPendiente, Arrays.asList(btnEstOrdTodos, btnEstOrdNoEntregado, btnEstOrdEntregado, btnEstOrdPendiente));
+    public void filtrarCategoriaProducto(ActionEvent event) {
+        Button origen = (Button) event.getSource();
+        categoriaProdFiltro = String.valueOf(origen.getUserData());
+        actualizarBotonFiltroActivo(origen, Arrays.asList(btnCatTodas, btnCatCamisas, btnCatPantalones, btnCatAccesorios));
         aplicarFiltrosActuales();
     }
 
     /**
-     * Cierra la sesión activa del Administrador y regresa al Login.
+     * Manejador unificado para los botones de filtro por Estado de Productos.
      */
+    @FXML
+    public void filtrarEstadoProducto(ActionEvent event) {
+        Button origen = (Button) event.getSource();
+        estadoProdFiltro = String.valueOf(origen.getUserData());
+        actualizarBotonFiltroActivo(origen, Arrays.asList(btnEstProdTodos, btnEstProdDisponible, btnEstProdAgotado));
+        aplicarFiltrosActuales();
+    }
+
+    /**
+     * Manejador unificado para los botones de filtro por Estado de Órdenes.
+     */
+    @FXML
+    public void filtrarEstadoOrden(ActionEvent event) {
+        Button origen = (Button) event.getSource();
+        estadoOrdFiltro = String.valueOf(origen.getUserData());
+        actualizarBotonFiltroActivo(origen, Arrays.asList(btnEstOrdTodos, btnEstOrdNoEntregado, btnEstOrdEntregado, btnEstOrdPendiente));
+        aplicarFiltrosActuales();
+    }
+
     @FXML
     public void manejarCerrarSesion(ActionEvent event) {
         SesionActual.cerrarSesion();
         redirigirALogin();
     }
 
-    /**
-     * Abre el modal para registrar un nuevo producto en Productos.json.
-     */
     @FXML
     public void abrirModalAnadirProducto(ActionEvent event) {
-        Optional<Producto> resultado = mostrarDialogoProducto(null);
+        Optional<Producto> resultado = DialogoProducto.mostrar(obtenerVentana(), null, gestorProductos);
         resultado.ifPresent(nuevo -> {
             if (gestorProductos.agregar(nuevo)) {
                 aplicarFiltrosActuales();
@@ -402,34 +327,40 @@ public class AdminDashboardController {
     }
 
     // =========================================================================
-    // 5. LÓGICA DE NEGOCIO Y MÉTODOS AUXILIARES (Validaciones, modales, cell factories)
+    // 5. LÓGICA DE NEGOCIO Y MÉTODOS AUXILIARES (Tablas, cell factories y CRUD)
     // =========================================================================
-
-    // ---------------------------------------------------------------- Tablas
     private void configurarTablaProductos() {
         colProdId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colProdNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colProdCategoria.setCellValueFactory(new PropertyValueFactory<>("categoria"));
         colProdStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
 
-        // Miniatura ImageView para rutas locales / imágenes importadas / URLs, con fallback
         colProdImagen.setCellValueFactory(new PropertyValueFactory<>("imagen"));
         colProdImagen.setCellFactory(col -> crearCellFactoryImagenProducto());
 
-        // Badge visual para el Estado del producto
         colProdEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
         colProdEstado.setCellFactory(col -> crearCellFactoryEstadoProducto());
 
-        // Formato monetario oficial de Figma: la columna guarda el NÚMERO (para ordenar bien)
-        // y la celda solo cambia cómo se MUESTRA ("$200.000 COP").
-        colProdPrecio.setCellValueFactory(cellData ->
-                new SimpleObjectProperty<>(cellData.getValue().getPrecio()));
+        // La columna guarda el número (para ordenar bien) y la celda lo muestra como "$200.000 COP"
+        colProdPrecio.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getPrecio()));
         colProdPrecio.setCellFactory(col -> crearCellFactoryMoneda());
 
-        // Los IDs se ordenan por valor numérico ("234" antes que "1000")
         colProdId.setComparator(Formato::compararNumericoOTexto);
-
         colProdAcciones.setCellFactory(col -> crearCellFactoryAccionesProductos());
+
+        // Doble clic sobre una fila abre el modal de edición del producto
+        tablaProductos.setRowFactory(tv -> {
+            TableRow<Producto> fila = new TableRow<>();
+            fila.setOnMouseClicked(evento -> {
+                if (evento.getButton() == MouseButton.PRIMARY
+                        && evento.getClickCount() == 2
+                        && !fila.isEmpty()
+                        && !esClicEnBoton(evento.getTarget())) {
+                    abrirModalEditarProducto(fila.getItem());
+                }
+            });
+            return fila;
+        });
     }
 
     private void configurarTablaOrdenes() {
@@ -437,47 +368,51 @@ public class AdminDashboardController {
         colOrdTotalArticulos.setCellValueFactory(new PropertyValueFactory<>("totalArticulos"));
         colOrdDireccion.setCellValueFactory(new PropertyValueFactory<>("direccion"));
 
-        // Cliente: cédula (como en Figma) y, debajo, el nombre si el cliente está registrado
+        // Cliente: cédula (como en Figma) y, debajo, el nombre si está registrado
         colOrdCliente.setCellValueFactory(cellData -> {
-            String cedula = cellData.getValue().getClienteId();
+            String cedula = cellData.getValue().getClienteIdentificacion();
             String nombre = nombresClientes.get(cedula);
             return new SimpleStringProperty(nombre != null ? cedula + "\n" + nombre : cedula);
         });
 
-        // Lista multilínea con viñetas ("• Camisa - 1")
         colOrdArticulos.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getArticulosFormateados()));
 
         colOrdEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
         colOrdEstado.setCellFactory(col -> crearCellFactoryEstadoOrden());
 
-        colOrdValorTotal.setCellValueFactory(cellData ->
-                new SimpleObjectProperty<>(cellData.getValue().getValorTotal()));
+        colOrdValorTotal.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getValorTotal()));
         colOrdValorTotal.setCellFactory(col -> crearCellFactoryMoneda());
 
-        // Los IDs se ordenan por valor numérico ("111" antes que "1000")
         colOrdId.setComparator(Formato::compararNumericoOTexto);
-
         colOrdAcciones.setCellFactory(col -> crearCellFactoryAccionesOrdenes());
 
-        // Altura de fila según la cantidad de artículos para que las viñetas no se recorten
-        tablaOrdenes.setRowFactory(tv -> new TableRow<Orden>() {
-            @Override
-            protected void updateItem(Orden orden, boolean empty) {
-                super.updateItem(orden, empty);
-                if (empty || orden == null) {
-                    setStyle("");
-                } else {
-                    int lineas = Math.max(orden.getArticulos().size(), 2);
-                    setStyle("-fx-cell-size: " + (20 + lineas * 20) + "px;");
+        // Altura de fila según cantidad de artículos + doble clic para editar la orden
+        tablaOrdenes.setRowFactory(tv -> {
+            TableRow<Orden> fila = new TableRow<>() {
+                @Override
+                protected void updateItem(Orden orden, boolean empty) {
+                    super.updateItem(orden, empty);
+                    if (empty || orden == null) {
+                        setStyle("");
+                    } else {
+                        int lineas = Math.max(orden.getArticulos().size(), 2);
+                        setStyle("-fx-cell-size: " + (20 + lineas * 20) + "px;");
+                    }
                 }
-            }
+            };
+            fila.setOnMouseClicked(evento -> {
+                if (evento.getButton() == MouseButton.PRIMARY
+                        && evento.getClickCount() == 2
+                        && !fila.isEmpty()
+                        && !esClicEnBoton(evento.getTarget())) {
+                    abrirModalEditarOrden(fila.getItem());
+                }
+            });
+            return fila;
         });
     }
 
-    /**
-     * Aplica los filtros reactivos según la vista activa (Productos u Órdenes).
-     */
     private void aplicarFiltrosActuales() {
         String textoBusqueda = campoBusqueda.getText() != null ? campoBusqueda.getText().trim() : "";
 
@@ -486,55 +421,25 @@ public class AdminDashboardController {
             tablaProductos.setItems(FXCollections.observableArrayList(filtrados));
             lblContadorRegistros.setText("Mostrando " + filtrados.size() + " producto(s)");
 
-            // Estado vacío: distingue "no hay datos" de "los filtros no encontraron nada"
             boolean hayFiltro = !textoBusqueda.isEmpty()
                     || !"TODAS".equals(categoriaProdFiltro) || !"TODOS".equals(estadoProdFiltro);
             placeholderProductos.setText(hayFiltro
                     ? "Ningún producto coincide con la búsqueda o los filtros."
                     : "Aún no hay productos registrados. Usa \"Añadir Producto +\" para crear el primero.");
         } else {
-            refrescarNombresClientes();
-            String termino = textoBusqueda.toLowerCase();
-
-            // Filtra por estado en el gestor y por ID / cédula / nombre del cliente aquí
-            List<Orden> filtradas = gestorOrdenes.filtrar("", estadoOrdFiltro).stream()
-                    .filter(o -> termino.isEmpty()
-                            || (o.getId() != null && o.getId().toLowerCase().contains(termino))
-                            || (o.getClienteId() != null && o.getClienteId().toLowerCase().contains(termino))
-                            || nombreContiene(o.getClienteId(), termino))
-                    .collect(Collectors.toList());
-
+            nombresClientes = gestorUsuarios.mapearNombresPorIdentificacion();
+            List<Orden> filtradas = gestorOrdenes.filtrar(textoBusqueda, estadoOrdFiltro, nombresClientes);
             tablaOrdenes.setItems(FXCollections.observableArrayList(filtradas));
             lblContadorRegistros.setText("Mostrando " + filtradas.size() + " orden(es)");
 
-            boolean hayFiltro = !termino.isEmpty() || !"TODOS".equals(estadoOrdFiltro);
+            boolean hayFiltro = !textoBusqueda.isEmpty() || !"TODOS".equals(estadoOrdFiltro);
             placeholderOrdenes.setText(hayFiltro
                     ? "Ninguna orden coincide con la búsqueda o el filtro."
                     : "Aún no hay órdenes registradas.");
         }
     }
 
-    private void refrescarNombresClientes() {
-        Map<String, String> mapa = new HashMap<>();
-        for (Usuario u : gestorUsuarios.listar()) {
-            if (u.getNumeroIdentificacion() != null) {
-                mapa.put(u.getNumeroIdentificacion(), u.getNombreCompleto());
-            }
-        }
-        nombresClientes = mapa;
-    }
-
-    private boolean nombreContiene(String cedula, String termino) {
-        String nombre = nombresClientes.get(cedula);
-        return nombre != null && nombre.toLowerCase().contains(termino);
-    }
-
     // ------------------------------------------------------------ Cell factories
-    /**
-     * Fábrica de celda para renderizar miniaturas ImageView en la columna IMAGEN.
-     * Soporta recursos del proyecto, imágenes importadas por el administrador y URLs externas.
-     * Si la imagen no existe o falla la carga, muestra la imagen genérica.
-     */
     private TableCell<Producto, String> crearCellFactoryImagenProducto() {
         return new TableCell<>() {
             private final ImageView imageView = new ImageView();
@@ -554,48 +459,12 @@ public class AdminDashboardController {
                     setGraphic(null);
                     return;
                 }
-                asignarMiniatura(imageView, referencia, 45);
+                DialogoProducto.asignarMiniatura(imageView, referencia, 45);
                 setGraphic(imageView);
             }
         };
     }
 
-    /**
-     * Asigna al ImageView la miniatura de la referencia indicada; ante cualquier error
-     * (archivo inexistente, URL caída) muestra la imagen genérica.
-     */
-    private void asignarMiniatura(ImageView destino, String referencia, double tamano) {
-        String url = GestorImagenes.resolverUrl(referencia);
-        if (url == null) {
-            destino.setImage(imagenGenerica(tamano));
-            return;
-        }
-        try {
-            Image imagen = new Image(url, tamano * 2, tamano * 2, true, true, true);
-            destino.setImage(imagen);
-            if (imagen.isError()) {
-                destino.setImage(imagenGenerica(tamano));
-            } else {
-                imagen.errorProperty().addListener((obs, antes, ahora) -> {
-                    if (ahora && destino.getImage() == imagen) {
-                        destino.setImage(imagenGenerica(tamano));
-                    }
-                });
-            }
-        } catch (Exception e) {
-            destino.setImage(imagenGenerica(tamano));
-        }
-    }
-
-    private Image imagenGenerica(double tamano) {
-        String url = GestorImagenes.resolverUrl(GestorImagenes.PLACEHOLDER);
-        return url != null ? new Image(url, tamano * 2, tamano * 2, true, true) : null;
-    }
-
-    /**
-     * Celda monetaria genérica: recibe el valor numérico de la columna y lo muestra como
-     * "$200.000 COP". Al ordenar, la tabla usa el número, no el texto.
-     */
     private <S> TableCell<S, Double> crearCellFactoryMoneda() {
         return new TableCell<>() {
             @Override
@@ -672,11 +541,17 @@ public class AdminDashboardController {
 
                 btnEditar.setGraphic(crearIcono("pencil.png"));
                 btnEditar.setTooltip(new Tooltip("Editar producto"));
-                btnEditar.setOnAction(e -> abrirModalEditarProducto(getTableView().getItems().get(getIndex())));
+                btnEditar.setOnAction(e -> {
+                    Producto fila = getTableRow() != null ? getTableRow().getItem() : null;
+                    if (fila != null) abrirModalEditarProducto(fila);
+                });
 
                 btnEliminar.setGraphic(crearIcono("remove.png"));
                 btnEliminar.setTooltip(new Tooltip("Eliminar producto"));
-                btnEliminar.setOnAction(e -> abrirModalEliminarProducto(getTableView().getItems().get(getIndex())));
+                btnEliminar.setOnAction(e -> {
+                    Producto fila = getTableRow() != null ? getTableRow().getItem() : null;
+                    if (fila != null) abrirModalEliminarProducto(fila);
+                });
             }
 
             @Override
@@ -700,11 +575,17 @@ public class AdminDashboardController {
 
                 btnEditar.setGraphic(crearIcono("pencil.png"));
                 btnEditar.setTooltip(new Tooltip("Actualizar orden"));
-                btnEditar.setOnAction(e -> abrirModalEditarOrden(getTableView().getItems().get(getIndex())));
+                btnEditar.setOnAction(e -> {
+                    Orden fila = getTableRow() != null ? getTableRow().getItem() : null;
+                    if (fila != null) abrirModalEditarOrden(fila);
+                });
 
                 btnEliminar.setGraphic(crearIcono("remove.png"));
                 btnEliminar.setTooltip(new Tooltip("Eliminar orden"));
-                btnEliminar.setOnAction(e -> abrirModalEliminarOrden(getTableView().getItems().get(getIndex())));
+                btnEliminar.setOnAction(e -> {
+                    Orden fila = getTableRow() != null ? getTableRow().getItem() : null;
+                    if (fila != null) abrirModalEliminarOrden(fila);
+                });
             }
 
             @Override
@@ -715,12 +596,9 @@ public class AdminDashboardController {
         };
     }
 
-    // ------------------------------------------------------------ Modales de producto
+    // ------------------------------------------------------------ Acciones CRUD
     private void abrirModalEditarProducto(Producto producto) {
-        if (producto == null) return;
-
-        // Se edita una COPIA: el objeto de la tabla solo cambia si el guardado tiene éxito
-        Optional<Producto> resultado = mostrarDialogoProducto(producto);
+        Optional<Producto> resultado = DialogoProducto.mostrar(obtenerVentana(), producto, gestorProductos);
         resultado.ifPresent(editado -> {
             if (gestorProductos.actualizar(editado)) {
                 aplicarFiltrosActuales();
@@ -731,172 +609,8 @@ public class AdminDashboardController {
         });
     }
 
-    /**
-     * Diálogo compartido para crear (original == null) o editar un producto.
-     * Valida los campos dentro del propio diálogo (resaltado en rojo + mensaje) sin cerrarlo.
-     * Incluye el botón "Examinar..." para enlazar una imagen del equipo con el producto.
-     */
-    private Optional<Producto> mostrarDialogoProducto(Producto original) {
-        boolean esNuevo = original == null;
-
-        Dialog<ButtonType> dialogo = new Dialog<>();
-        dialogo.setTitle(esNuevo ? "Añadir producto - Belle Store" : "Editar producto - " + original.getId());
-        dialogo.setHeaderText(esNuevo ? "Ingresa los datos del nuevo producto:" : "Modifica los datos del producto:");
-        aplicarEstilosDialogo(dialogo);
-
-        ButtonType btnGuardar = new ButtonType(esNuevo ? "Guardar" : "Actualizar", ButtonBar.ButtonData.OK_DONE);
-        dialogo.getDialogPane().getButtonTypes().addAll(btnGuardar, BTN_CANCELAR);
-
-        TextField txtId = new TextField(esNuevo ? generarSiguienteIdProducto() : original.getId());
-        txtId.setDisable(!esNuevo); // El ID es la clave única: no se edita
-        TextField txtNombre = new TextField(esNuevo ? "" : original.getNombre());
-        txtNombre.setPromptText("Ej. CHAQUETA DE CUERO");
-
-        ComboBox<String> cbCategoria = new ComboBox<>(FXCollections.observableArrayList(CATEGORIAS));
-        cbCategoria.setValue(esNuevo || !CATEGORIAS.contains(original.getCategoria()) ? CATEGORIAS.get(0) : original.getCategoria());
-
-        TextField txtStock = new TextField(esNuevo ? "1" : String.valueOf(original.getStock()));
-        Label lblEstado = new Label();
-        lblEstado.getStyleClass().add("etiqueta-estado-dialogo");
-        Runnable actualizarEstado = () -> {
-            try {
-                int stock = Integer.parseInt(txtStock.getText().trim());
-                lblEstado.setText(Validaciones.estadoPorStock(stock) + " (se calcula según el stock)");
-            } catch (NumberFormatException e) {
-                lblEstado.setText("—");
-            }
-        };
-        txtStock.textProperty().addListener((obs, a, b) -> actualizarEstado.run());
-        actualizarEstado.run();
-
-        TextField txtPrecio = new TextField(esNuevo ? "" : String.valueOf((long) original.getPrecio()));
-        txtPrecio.setPromptText("Valor en pesos, sin puntos (ej. 180000)");
-
-        // --- Imagen: ruta editable + botón Examinar + vista previa ---
-        TextField txtImagen = new TextField(esNuevo ? GestorImagenes.PLACEHOLDER : original.getImagen());
-        txtImagen.setPromptText("img/..., imagenes/... o https://...");
-        txtImagen.setPrefWidth(260);
-        Button btnExaminar = new Button("Examinar...");
-        btnExaminar.getStyleClass().add("boton-secundario");
-
-        ImageView vistaPrevia = new ImageView();
-        vistaPrevia.setFitWidth(90);
-        vistaPrevia.setFitHeight(90);
-        vistaPrevia.setPreserveRatio(true);
-        Runnable actualizarVistaPrevia = () -> asignarMiniatura(vistaPrevia, txtImagen.getText(), 90);
-        txtImagen.textProperty().addListener((obs, a, b) -> actualizarVistaPrevia.run());
-        actualizarVistaPrevia.run();
-
-        Label lblError = new Label();
-        lblError.getStyleClass().add("mensaje-error");
-        lblError.setWrapText(true);
-        lblError.setMaxWidth(380);
-
-        btnExaminar.setOnAction(e -> {
-            FileChooser selector = new FileChooser();
-            selector.setTitle("Selecciona la imagen del producto");
-            selector.getExtensionFilters().add(new FileChooser.ExtensionFilter(
-                    "Imágenes (png, jpg, gif, bmp)", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp"));
-            File elegido = selector.showOpenDialog(dialogo.getDialogPane().getScene().getWindow());
-            if (elegido != null) {
-                try {
-                    txtImagen.setText(GestorImagenes.importarImagen(elegido));
-                    lblError.setText("");
-                } catch (IOException ex) {
-                    lblError.setText(ex.getMessage());
-                }
-            }
-        });
-
-        GridPane grid = new GridPane();
-        grid.setHgap(12);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 20, 10, 10));
-        grid.add(new Label("ID del producto:"), 0, 0);
-        grid.add(txtId, 1, 0, 2, 1);
-        grid.add(new Label("Nombre:"), 0, 1);
-        grid.add(txtNombre, 1, 1, 2, 1);
-        grid.add(new Label("Categoría:"), 0, 2);
-        grid.add(cbCategoria, 1, 2, 2, 1);
-        grid.add(new Label("Stock:"), 0, 3);
-        grid.add(txtStock, 1, 3, 2, 1);
-        grid.add(new Label("Estado:"), 0, 4);
-        grid.add(lblEstado, 1, 4, 2, 1);
-        grid.add(new Label("Precio (COP):"), 0, 5);
-        grid.add(txtPrecio, 1, 5, 2, 1);
-        grid.add(new Label("Imagen:"), 0, 6);
-        grid.add(txtImagen, 1, 6);
-        grid.add(btnExaminar, 2, 6);
-        grid.add(vistaPrevia, 1, 7);
-        grid.add(lblError, 0, 8, 3, 1);
-        dialogo.getDialogPane().setContent(grid);
-
-        // Validación sin cerrar el diálogo: se consume el evento del botón Guardar si hay errores
-        Button botonOk = (Button) dialogo.getDialogPane().lookupButton(btnGuardar);
-        botonOk.addEventFilter(ActionEvent.ACTION, evento -> {
-            limpiarResaltado(txtId, txtNombre, txtStock, txtPrecio);
-            String error = validarFormularioProducto(esNuevo, txtId, txtNombre, txtStock, txtPrecio);
-            if (error != null) {
-                lblError.setText(error);
-                evento.consume();
-            }
-        });
-
-        Optional<ButtonType> respuesta = dialogo.showAndWait();
-        if (respuesta.isPresent() && respuesta.get() == btnGuardar) {
-            int stock = Integer.parseInt(txtStock.getText().trim());
-            String imagen = txtImagen.getText() == null || txtImagen.getText().trim().isEmpty()
-                    ? GestorImagenes.PLACEHOLDER : txtImagen.getText().trim();
-            return Optional.of(new Producto(
-                    txtId.getText().trim(),
-                    imagen,
-                    txtNombre.getText().trim().toUpperCase(),
-                    cbCategoria.getValue(),
-                    stock,
-                    Validaciones.estadoPorStock(stock),
-                    Double.parseDouble(txtPrecio.getText().trim())
-            ));
-        }
-        return Optional.empty();
-    }
-
-    /**
-     * Valida el formulario de producto y resalta en rojo los campos erróneos.
-     * @return mensaje de error o null si todo es válido.
-     */
-    private String validarFormularioProducto(boolean esNuevo, TextField txtId, TextField txtNombre,
-                                             TextField txtStock, TextField txtPrecio) {
-        String id = txtId.getText() == null ? "" : txtId.getText().trim();
-        if (esNuevo) {
-            if (!id.matches("[A-Za-z0-9-]{1,12}")) {
-                resaltar(txtId);
-                return "El ID debe tener entre 1 y 12 caracteres (letras, números o guion).";
-            }
-            if (gestorProductos.buscarPorId(id) != null) {
-                resaltar(txtId);
-                return "Ya existe un producto con el ID " + id + ".";
-            }
-        }
-        String error = Validaciones.validarProducto(txtNombre.getText(), txtStock.getText(), txtPrecio.getText());
-        if (error != null) {
-            if (error.startsWith("El nombre")) resaltar(txtNombre);
-            else if (error.startsWith("El stock")) resaltar(txtStock);
-            else resaltar(txtPrecio);
-        }
-        return error;
-    }
-
-    /**
-     * Elimina un producto solo si ninguna orden lo referencia (integridad referencial).
-     */
     private void abrirModalEliminarProducto(Producto producto) {
-        if (producto == null) return;
-
-        List<String> ordenesRelacionadas = gestorOrdenes.listar().stream()
-                .filter(o -> o.getArticulos().stream().anyMatch(i -> producto.getId().equalsIgnoreCase(i.getProductoId())))
-                .map(Orden::getId)
-                .collect(Collectors.toList());
-
+        List<String> ordenesRelacionadas = gestorOrdenes.buscarIdsOrdenesConProducto(producto.getId());
         if (!ordenesRelacionadas.isEmpty()) {
             mostrarAlerta("No se puede eliminar",
                     "El producto \"" + producto.getNombre() + "\" aparece en las órdenes: "
@@ -911,6 +625,8 @@ public class AdminDashboardController {
         alerta.setHeaderText("¿Deseas eliminar este producto?");
         alerta.setContentText(producto.getNombre() + " (ID: " + producto.getId() + ")");
         alerta.getButtonTypes().setAll(BTN_ELIMINAR, BTN_CANCELAR);
+        DialogoProducto.aplicarEstilos(alerta, obtenerVentana());
+
         Optional<ButtonType> respuesta = alerta.showAndWait();
         if (respuesta.isPresent() && respuesta.get() == BTN_ELIMINAR) {
             if (gestorProductos.eliminar(producto.getId())) {
@@ -921,76 +637,26 @@ public class AdminDashboardController {
         }
     }
 
-    // ------------------------------------------------------------ Modales de orden
     private void abrirModalEditarOrden(Orden orden) {
-        if (orden == null) return;
-
-        Dialog<ButtonType> dialogo = new Dialog<>();
-        dialogo.setTitle("Actualizar orden #" + orden.getId());
-        dialogo.setHeaderText("Modifica el estado o la dirección de entrega:");
-        aplicarEstilosDialogo(dialogo);
-
-        ButtonType btnActualizar = new ButtonType("Actualizar", ButtonBar.ButtonData.OK_DONE);
-        dialogo.getDialogPane().getButtonTypes().addAll(btnActualizar, BTN_CANCELAR);
-
-        TextField txtId = new TextField(orden.getId());
-        txtId.setDisable(true);
-        TextField txtCliente = new TextField(orden.getClienteId());
-        txtCliente.setDisable(true);
-        TextField txtDireccion = new TextField(orden.getDireccion());
-        ComboBox<String> cbEstado = new ComboBox<>(FXCollections.observableArrayList(ESTADOS_ORDEN));
-        cbEstado.setValue(orden.getEstado());
-
-        Label lblError = new Label();
-        lblError.getStyleClass().add("mensaje-error");
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 20, 10, 10));
-        grid.add(new Label("Orden:"), 0, 0);
-        grid.add(txtId, 1, 0);
-        grid.add(new Label("Cliente:"), 0, 1);
-        grid.add(txtCliente, 1, 1);
-        grid.add(new Label("Dirección:"), 0, 2);
-        grid.add(txtDireccion, 1, 2);
-        grid.add(new Label("Estado:"), 0, 3);
-        grid.add(cbEstado, 1, 3);
-        grid.add(lblError, 0, 4, 2, 1);
-        dialogo.getDialogPane().setContent(grid);
-
-        Button botonOk = (Button) dialogo.getDialogPane().lookupButton(btnActualizar);
-        botonOk.addEventFilter(ActionEvent.ACTION, evento -> {
-            limpiarResaltado(txtDireccion);
-            String dir = txtDireccion.getText() == null ? "" : txtDireccion.getText().trim();
-            if (dir.length() < 5) {
-                resaltar(txtDireccion);
-                lblError.setText("La dirección debe tener al menos 5 caracteres.");
-                evento.consume();
-            }
-        });
-
-        Optional<ButtonType> resultado = dialogo.showAndWait();
-        if (resultado.isPresent() && resultado.get() == btnActualizar) {
-            // Copia: el objeto mostrado en la tabla no cambia si el guardado falla
-            Orden copia = new Orden(orden.getId(), orden.getClienteId(), orden.getArticulos(),
-                    txtDireccion.getText().trim(), cbEstado.getValue(), orden.getValorTotal(), orden.getFecha());
+        String nombreCliente = nombresClientes.get(orden.getClienteIdentificacion());
+        Optional<Orden> resultado = DialogoOrden.mostrar(obtenerVentana(), orden, nombreCliente);
+        resultado.ifPresent(copia -> {
             if (gestorOrdenes.actualizar(copia)) {
                 aplicarFiltrosActuales();
             } else {
                 mostrarAlerta("Error", "No se pudo actualizar la orden.", Alert.AlertType.ERROR);
             }
-        }
+        });
     }
 
     private void abrirModalEliminarOrden(Orden orden) {
-        if (orden == null) return;
-
         Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
         alerta.setTitle("Confirmar eliminación de orden");
         alerta.setHeaderText("¿Deseas eliminar esta orden?");
-        alerta.setContentText("Orden #" + orden.getId() + " del cliente " + orden.getClienteId());
+        alerta.setContentText("Orden #" + orden.getId() + " del cliente " + orden.getClienteIdentificacion());
         alerta.getButtonTypes().setAll(BTN_ELIMINAR, BTN_CANCELAR);
+        DialogoProducto.aplicarEstilos(alerta, obtenerVentana());
+
         Optional<ButtonType> respuesta = alerta.showAndWait();
         if (respuesta.isPresent() && respuesta.get() == BTN_ELIMINAR) {
             if (gestorOrdenes.eliminar(orden.getId())) {
@@ -1001,43 +667,22 @@ public class AdminDashboardController {
         }
     }
 
-    // ------------------------------------------------------------ Utilidades
-    /** Genera el siguiente ID numérico libre: máximo ID numérico existente + 1. */
-    private String generarSiguienteIdProducto() {
-        long maximo = 0;
-        for (Producto p : gestorProductos.listar()) {
-            try {
-                maximo = Math.max(maximo, Long.parseLong(p.getId().trim()));
-            } catch (NumberFormatException ignorada) {
-                // IDs no numéricos no participan en la secuencia
+    // ------------------------------------------------------------ Utilidades UI
+    /** Evita que un doble clic rápido sobre los botones de acción (Editar/Eliminar) abra el modal dos veces. */
+    private boolean esClicEnBoton(Object objetivo) {
+        Node actual = (objetivo instanceof Node) ? (Node) objetivo : null;
+        while (actual != null && !(actual instanceof TableRow)) {
+            if (actual instanceof Button) {
+                return true;
             }
+            actual = actual.getParent();
         }
-        return String.valueOf(maximo + 1);
+        return false;
     }
 
-    private void resaltar(TextField campo) {
-        if (!campo.getStyleClass().contains("campo-error")) {
-            campo.getStyleClass().add("campo-error");
-        }
-    }
-
-    private void limpiarResaltado(TextField... campos) {
-        for (TextField campo : campos) {
-            campo.getStyleClass().remove("campo-error");
-        }
-    }
-
-    private void aplicarEstilosDialogo(Dialog<?> dialogo) {
-        try {
-            dialogo.getDialogPane().getStylesheets().add(
-                    getClass().getResource("/com/mycompany/belle_store/css/estilos.css").toExternalForm());
-        } catch (NullPointerException ignorada) {
-            // Sin estilos personalizados: se usa el aspecto por defecto
-        }
-        Window dueno = tablaProductos.getScene() != null ? tablaProductos.getScene().getWindow() : null;
-        if (dueno != null) {
-            dialogo.initOwner(dueno);
-        }
+    private Window obtenerVentana() {
+        return tablaProductos != null && tablaProductos.getScene() != null
+                ? tablaProductos.getScene().getWindow() : null;
     }
 
     private ImageView crearIcono(String nombreArchivo) {
@@ -1074,6 +719,7 @@ public class AdminDashboardController {
         alerta.setHeaderText(null);
         alerta.setContentText(mensaje);
         alerta.getButtonTypes().setAll(BTN_ACEPTAR);
+        DialogoProducto.aplicarEstilos(alerta, obtenerVentana());
         alerta.showAndWait();
     }
 

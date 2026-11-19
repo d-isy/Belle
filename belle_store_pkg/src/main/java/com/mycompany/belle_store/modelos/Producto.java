@@ -1,10 +1,14 @@
 package com.mycompany.belle_store.modelos;
 
 import com.mycompany.belle_store.util.Formato;
+import com.mycompany.belle_store.validacion.Validaciones;
 
 /**
  * Modelo de datos representativo de un Producto en Belle Store.
  * Almacena información del catálogo visual y del inventario de administración.
+ *
+ * <p>El estado ({@code DISPONIBLE} / {@code AGOTADO}) no se persiste aparte:
+ * siempre se deriva del {@code stock} para evitar inconsistencias.</p>
  */
 public class Producto {
 
@@ -16,11 +20,10 @@ public class Producto {
     // 2. ATRIBUTOS, SERVICIOS Y ESTADO
     // =========================================================================
     private String id;
-    private String imagen; // Ruta local (ej. "/img/...") o URL externa
+    private String imagen; // Ruta local (ej. "img/...") o importada ("imagenes/...") o URL externa
     private String nombre;
     private String categoria;
     private int stock;
-    private String estado; // "DISPONIBLE", "AGOTADO", etc.
     private double precio;
 
     // =========================================================================
@@ -33,16 +36,16 @@ public class Producto {
     }
 
     /**
-     * Constructor completo para instanciar nuevos productos.
+     * Constructor principal para instanciar nuevos productos.
+     * El estado se deriva automáticamente del stock ({@code 0 => AGOTADO}, {@code >0 => DISPONIBLE}).
      */
     public Producto(String id, String imagen, String nombre, String categoria,
-                    int stock, String estado, double precio) {
+                    int stock, double precio) {
         this.id = id;
         this.imagen = imagen;
         this.nombre = nombre;
         this.categoria = categoria;
         this.stock = stock;
-        this.estado = estado;
         this.precio = precio;
     }
 
@@ -93,12 +96,11 @@ public class Producto {
         this.stock = stock;
     }
 
+    /**
+     * Estado derivado del inventario actual ({@code DISPONIBLE} si stock > 0, si no {@code AGOTADO}).
+     */
     public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
+        return Validaciones.estadoPorStock(this.stock);
     }
 
     public double getPrecio() {
@@ -123,7 +125,7 @@ public class Producto {
                 ", nombre='" + nombre + '\'' +
                 ", categoria='" + categoria + '\'' +
                 ", stock=" + stock +
-                ", estado='" + estado + '\'' +
+                ", estado='" + getEstado() + '\'' +
                 ", precio=" + getPrecioFormateado() +
                 '}';
     }

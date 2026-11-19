@@ -46,9 +46,8 @@ public class ClientePlaceholderController {
     // =========================================================================
     @FXML
     public void initialize() {
-        // Verificar que exista una sesión activa
+        // El control de acceso ya se valida antes de cargar esta vista en App.setRoot()
         if (!SesionActual.haySesionIniciada()) {
-            redirigirALogin();
             return;
         }
 

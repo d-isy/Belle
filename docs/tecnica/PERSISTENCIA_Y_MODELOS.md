@@ -16,15 +16,12 @@ Este documento explica didácticamente cómo funciona el almacenamiento de datos
   ```
   Esto asegura que el archivo JSON tenga saltos de línea e identaciones limpias, en lugar de una sola línea comprimida.
 
-### Flujo de Lectura y Escritura
-1. **Escritura (Serialización):**
-   ```java
-   try (Writer writer = new OutputStreamWriter(new FileOutputStream(archivo), StandardCharsets.UTF_8)) {
-       gson.toJson(lista, writer);
-   }
-   ```
+### Flujo de Lectura y Escritura (`GestorJson<T>`)
+Los tres gestores (`GestorUsuarios`, `GestorProductos`, `GestorOrdenes`) heredan de la clase genérica `GestorJson<T>`, que centraliza el acceso a disco:
+1. **Escritura atómica (Serialización):**
+   Para evitar que un fallo a mitad de escritura deje un archivo JSON truncado o vacío, `guardarTodos` escribe primero en un archivo temporal (`*.json.tmp`) en la misma carpeta y luego reemplaza el archivo definitivo con `Files.move(..., ATOMIC_MOVE, REPLACE_EXISTING)`.
 2. **Lectura (Deserialización de listas genéricas con TypeToken):**
-   Como Java borra la información de tipos genéricos en tiempo de ejecución (Type Erasure), Gson requiere `TypeToken` para reconstruir una `List<Entidad>`:
+   Como Java borra la información de tipos genéricos en tiempo de ejecución (Type Erasure), cada gestor pasa su `TypeToken` a `GestorJson<T>` para reconstruir `List<Entidad>`:
    ```java
    Type tipoLista = new TypeToken<List<Usuario>>() {}.getType();
    List<Usuario> usuarios = gson.fromJson(reader, tipoLista);
@@ -66,7 +63,7 @@ Representa los artículos comercializados por la tienda. Se persiste en `Product
 | `nombre` | `String` | Nombre comercial del artículo (ej. `"CAMISA AZUL"`). |
 | `categoria` | `String` | Categoría textil (ej. `"CAMISAS"`, `"PANTALONES"`, `"ACCESORIOS"`). |
 | `stock` | `int` | Unidades físicas disponibles en inventario (ej. `2`). |
-| `estado` | `String` | Disponibilidad para venta (ej. `"DISPONIBLE"`, `"AGOTADO"`). |
+| `estado` *(derivado)* | `String` | No se persiste en JSON: `getEstado()` lo calcula siempre desde `stock` (`0 => "AGOTADO"`, `> 0 => "DISPONIBLE"`). |
 | `precio` | `double` | Valor unitario en pesos colombianos (ej. `200000.0`). |
 
 * **Método auxiliar `getPrecioFormateado()`:** Retorna la cadena monetaria estándar de Figma: `"$200.000 COP"`.
@@ -93,12 +90,12 @@ Representa un pedido o compra realizada por un cliente. Se persiste en `Ordenes.
 | Atributo | Tipo de Dato | Descripción |
 | :--- | :--- | :--- |
 | `id` | `String` | Número de orden visible en Figma (ej. `"111"`). |
-| `clienteId` | `String` | Identificación del cliente que compró (ej. `"28483"`). |
-| `articulos` | `List<ItemOrden>` | Lista de artículos pertenecientes al pedido. |
-| `totalArticulos` | `int` | Suma de unidades de todos los artículos de la orden. |
+| `clienteIdentificacion` | `String` | Número de identificación (cédula) del cliente (ej. `"28483"`). Anotado con `@SerializedName(value = "clienteIdentificacion", alternate = {"clienteId"})` para leer JSON antiguos sin romperse. |
+| `articulos` | `List<ItemOrden>` | Lista de artículos pertenecientes al pedido (única fuente de verdad para totales). |
+| `totalArticulos` *(derivado)* | `int` | No se persiste en JSON: `getTotalArticulos()` suma las cantidades de `articulos`. |
 | `direccion` | `String` | Dirección de entrega (ej. `"Cll 1 # 2"`). |
 | `estado` | `String` | Estado logístico (ej. `"No Entregado"`, `"Entregado"`, `"Pendiente"`). |
-| `valorTotal` | `double` | Importe total liquidado de la orden (ej. `200000.0`). |
+| `valorTotal` *(derivado)* | `double` | No se persiste en JSON: `getValorTotal()` suma `cantidad * precioUnitario` de `articulos`. |
 | `fecha` | `String` | Fecha y hora de creación (ej. `"05/10/2026 05:31:01"`). |
 
 * **Método auxiliar `getArticulosFormateados()`:** Genera una lista con viñetas multilínea para la celda de la tabla (`"• Camisa - 1"`).

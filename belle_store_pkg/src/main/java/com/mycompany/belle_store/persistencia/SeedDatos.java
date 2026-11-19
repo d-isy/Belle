@@ -7,7 +7,6 @@ import com.mycompany.belle_store.modelos.Usuario;
 import com.mycompany.belle_store.seguridad.HashContrasena;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -99,7 +98,6 @@ public class SeedDatos {
                     "CAMISA AZUL",
                     "CAMISAS",
                     2,
-                    "DISPONIBLE",
                     200000.0
             ));
 
@@ -110,18 +108,16 @@ public class SeedDatos {
                     "PANTALÓN NEGRO",
                     "PANTALONES",
                     5,
-                    "DISPONIBLE",
                     150000.0
             ));
 
-            // Producto 3 (sin imagen oficial en Figma): Producto agotado de la categoría Accesorios
+            // Producto 3 (sin imagen oficial en Figma): Producto agotado (stock 0 => AGOTADO)
             seed.add(new Producto(
                     "236",
                     "img/placeholder_producto.png",
                     "BOLSO DE CUERO",
                     "ACCESORIOS",
                     0,
-                    "AGOTADO",
                     120000.0
             ));
 
@@ -132,7 +128,6 @@ public class SeedDatos {
                     "CAMISA BLANCA",
                     "CAMISAS",
                     4,
-                    "DISPONIBLE",
                     180000.0
             ));
 
@@ -156,7 +151,6 @@ public class SeedDatos {
                     articulos1,
                     "Cll 1 # 2",
                     "No Entregado",
-                    200000.0,
                     "05/10/2026 05:31:01"
             ));
 
@@ -170,7 +164,6 @@ public class SeedDatos {
                     articulos2,
                     "Cll 1 # 2",
                     "Entregado",
-                    150000.0,
                     "06/10/2026 10:15:30"
             ));
 
@@ -185,7 +178,6 @@ public class SeedDatos {
                     articulos3,
                     "Cll 1 # 2",
                     "Pendiente",
-                    300000.0,
                     "07/10/2026 14:20:00"
             ));
 

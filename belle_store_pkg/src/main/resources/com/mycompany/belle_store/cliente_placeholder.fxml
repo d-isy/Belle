@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/13"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.mycompany.belle_store.controladores.ClientePlaceholderController"
+            prefWidth="1280.0" prefHeight="768.0"
+            stylesheets="@css/estilos.css">
+
+    <!-- ========================================================================= -->
+    <!-- CABECERA GLOBAL                                                           -->
+    <!-- ========================================================================= -->
+    <top>
+        <HBox styleClass="cabecera-global" alignment="CENTER_LEFT" spacing="20">
+            <Label text="Belle store" styleClass="logo-belle" />
+            <Region HBox.hgrow="ALWAYS" />
+            <HBox alignment="CENTER" spacing="25">
+                <Label text="Hombre" styleClass="nav-link" />
+                <Label text="Mujer" styleClass="nav-link" />
+                <Label text="Accesorios" styleClass="nav-link" />
+            </HBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <HBox alignment="CENTER_RIGHT" spacing="18">
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/search.png" />
+                    </image>
+                </ImageView>
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/heart.png" />
+                    </image>
+                </ImageView>
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/cart.png" />
+                    </image>
+                </ImageView>
+                <ImageView fitWidth="22" fitHeight="22" preserveRatio="true" styleClass="icono-cabecera">
+                    <image>
+                        <Image url="@img/menu.png" />
+                    </image>
+                </ImageView>
+            </HBox>
+        </HBox>
+    </top>
+
+    <!-- ========================================================================= -->
+    <!-- CONTENIDO CENTRAL: Tarjeta informativa del Cliente                        -->
+    <!-- ========================================================================= -->
+    <center>
+        <StackPane alignment="CENTER" style="-fx-background-color: #F0F2F5;">
+            <padding>
+                <Insets top="30" right="30" bottom="30" left="30" />
+            </padding>
+            <VBox styleClass="tarjeta-cliente" maxWidth="620" spacing="18" alignment="TOP_CENTER">
+                <!-- Título -->
+                <Label text="Perfil del Cliente" styleClass="titulo-formulario" />
+                <Label text="Bienvenido a tu panel de usuario en Belle Store" style="-fx-font-size: 15px; -fx-text-fill: #666666;" />
+
+                <Separator />
+
+                <!-- Cuadro de Aviso didáctico -->
+                <VBox styleClass="aviso-placeholder" maxWidth="Infinity" spacing="5">
+                    <Label text="📌 Vista Placeholder (Fase de Desarrollo Actual):" styleClass="aviso-placeholder-texto" />
+                    <Label text="El catálogo interactivo de compras para clientes se integrará en etapas posteriores. Aquí puedes validar que tu sesión se autenticó correctamente con los datos registrados en Usuarios.json."
+                           wrapText="true" style="-fx-font-size: 13px; -fx-text-fill: #6c5200;" />
+                </VBox>
+
+                <!-- Grid con los datos del cliente logueado -->
+                <GridPane hgap="15" vgap="14" maxWidth="Infinity">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="180" prefWidth="200" />
+                        <ColumnConstraints hgrow="ALWAYS" />
+                    </columnConstraints>
+
+                    <!-- Nombre -->
+                    <Label text="Nombre Completo:" styleClass="etiqueta-dato-clave" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                    <Label fx:id="lblNombre" text="-" styleClass="etiqueta-dato-valor" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+                    <!-- Identificación -->
+                    <Label text="N° de Identificación:" styleClass="etiqueta-dato-clave" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                    <Label fx:id="lblIdentificacion" text="-" styleClass="etiqueta-dato-valor" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                    <!-- Correo -->
+                    <Label text="Correo Electrónico:" styleClass="etiqueta-dato-clave" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                    <Label fx:id="lblCorreo" text="-" styleClass="etiqueta-dato-valor" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+                    <!-- Celular -->
+                    <Label text="Número de Celular:" styleClass="etiqueta-dato-clave" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                    <Label fx:id="lblCelular" text="-" styleClass="etiqueta-dato-valor" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+                    <!-- Dirección -->
+                    <Label text="Dirección de Entrega:" styleClass="etiqueta-dato-clave" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                    <Label fx:id="lblDireccion" text="-" styleClass="etiqueta-dato-valor" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+
+                    <!-- Rol -->
+                    <Label text="Rol en el Sistema:" styleClass="etiqueta-dato-clave" GridPane.rowIndex="5" GridPane.columnIndex="0" />
+                    <Label fx:id="lblRol" text="-" styleClass="etiqueta-dato-valor" style="-fx-text-fill: #1565C0;" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+                </GridPane>
+
+                <Separator />
+
+                <!-- Botón de Cerrar Sesión -->
+                <HBox alignment="CENTER" spacing="15" style="-fx-padding: 10 0 0 0;">
+                    <Button text="Cerrar Sesión"
+                            styleClass="boton-peligro"
+                            onAction="#manejarCerrarSesion"
+                            prefWidth="200" prefHeight="42" />
+                </HBox>
+            </VBox>
+        </StackPane>
+    </center>
+</BorderPane>

@@ -174,6 +174,21 @@ public class SeedDatos {
                     "06/10/2026 10:15:30"
             ));
 
+            // Orden 3: Orden en estado Pendiente con múltiples artículos para probar filtros y filas multilínea
+            List<ItemOrden> articulos3 = new ArrayList<>();
+            articulos3.add(new ItemOrden("237", "Camisa Blanca", 1, 180000.0));
+            articulos3.add(new ItemOrden("236", "Bolso de Cuero", 1, 120000.0));
+
+            seed.add(new Orden(
+                    "113",
+                    "28483",
+                    articulos3,
+                    "Cll 1 # 2",
+                    "Pendiente",
+                    300000.0,
+                    "07/10/2026 14:20:00"
+            ));
+
             gestorOrdenes.guardarTodos(seed);
             System.out.println("[SeedDatos] Ordenes.json inicializado exitosamente.");
         }

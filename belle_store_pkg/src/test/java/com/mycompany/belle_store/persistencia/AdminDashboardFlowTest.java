@@ -79,11 +79,30 @@ public class AdminDashboardFlowTest {
         List<Orden> ordenesCliente = gestorOrdenes.filtrar("28483", "TODOS");
         assertFalse(ordenesCliente.isEmpty(), "Debe encontrar órdenes para el cliente 28483");
 
-        // Filtrar por estado de orden
+        // Filtrar por estado de orden: No Entregado
         List<Orden> ordenesNoEntregadas = gestorOrdenes.filtrar("", "No Entregado");
+        assertFalse(ordenesNoEntregadas.isEmpty(), "Debe existir al menos una orden en estado 'No Entregado' en el seed");
         for (Orden o : ordenesNoEntregadas) {
             assertEquals("No Entregado", o.getEstado(), "Las órdenes deben estar en estado 'No Entregado'");
         }
+
+        // Filtrar por estado de orden: Entregado
+        List<Orden> ordenesEntregadas = gestorOrdenes.filtrar("", "Entregado");
+        assertFalse(ordenesEntregadas.isEmpty(), "Debe existir al menos una orden en estado 'Entregado' en el seed");
+        for (Orden o : ordenesEntregadas) {
+            assertEquals("Entregado", o.getEstado(), "Las órdenes deben estar en estado 'Entregado'");
+        }
+
+        // Filtrar por estado de orden: Pendiente (orden semilla 113)
+        List<Orden> ordenesPendientes = gestorOrdenes.filtrar("", "Pendiente");
+        assertFalse(ordenesPendientes.isEmpty(), "Debe existir al menos una orden en estado 'Pendiente' en el seed");
+        for (Orden o : ordenesPendientes) {
+            assertEquals("Pendiente", o.getEstado(), "Las órdenes deben estar en estado 'Pendiente'");
+        }
+        Orden ordenPendienteSeed = gestorOrdenes.buscarPorId("113");
+        assertNotNull(ordenPendienteSeed, "La orden semilla 113 en estado 'Pendiente' debe existir");
+        assertEquals("Pendiente", ordenPendienteSeed.getEstado());
+        assertEquals(2, ordenPendienteSeed.getTotalArticulos());
     }
 
     @Test

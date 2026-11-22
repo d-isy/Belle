@@ -69,7 +69,7 @@
             <VBox styleClass="tarjeta-cliente" maxWidth="620" spacing="18" alignment="TOP_CENTER">
                 <!-- Título -->
                 <Label text="Perfil del Cliente" styleClass="titulo-formulario" />
-                <Label text="Bienvenido a tu panel de usuario en Belle Store" style="-fx-font-size: 15px; -fx-text-fill: #666666;" />
+                <Label text="Bienvenido a tu panel de usuario en Belle Store" styleClass="subtitulo-cliente" />
 
                 <Separator />
 
@@ -77,7 +77,7 @@
                 <VBox styleClass="aviso-placeholder" maxWidth="Infinity" spacing="5">
                     <Label text="📌 Vista Placeholder (Fase de Desarrollo Actual):" styleClass="aviso-placeholder-texto" />
                     <Label text="El catálogo interactivo de compras para clientes se integrará en etapas posteriores. Aquí puedes validar que tu sesión se autenticó correctamente con los datos registrados en Usuarios.json."
-                           wrapText="true" style="-fx-font-size: 13px; -fx-text-fill: #6c5200;" />
+                           wrapText="true" styleClass="aviso-placeholder-detalle" />
                 </VBox>
 
                 <!-- Grid con los datos del cliente logueado -->
@@ -109,7 +109,7 @@
 
                     <!-- Rol -->
                     <Label text="Rol en el Sistema:" styleClass="etiqueta-dato-clave" GridPane.rowIndex="5" GridPane.columnIndex="0" />
-                    <Label fx:id="lblRol" text="-" styleClass="etiqueta-dato-valor" style="-fx-text-fill: #1565C0;" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+                    <Label fx:id="lblRol" text="-" styleClass="etiqueta-dato-valor, etiqueta-dato-rol" GridPane.rowIndex="5" GridPane.columnIndex="1" />
                 </GridPane>
 
                 <Separator />

@@ -1,22 +1,17 @@
 package com.mycompany.belle_store.persistencia;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.mycompany.belle_store.modelos.Producto;
 
-import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Gestor de persistencia en formato JSON para la entidad Producto.
- * Permite listar, agregar, editar, eliminar y filtrar productos en Productos.json.
+ * Hereda lectura/escritura atómica de {@link GestorJson} y provee CRUD y filtrado.
  */
-public class GestorProductos {
+public class GestorProductos extends GestorJson<Producto> {
 
     // =========================================================================
     // 1. COMPONENTES FXML (@FXML) - No aplica
@@ -26,15 +21,13 @@ public class GestorProductos {
     // 2. ATRIBUTOS, SERVICIOS Y ESTADO
     // =========================================================================
     private static final String NOMBRE_ARCHIVO = "Productos.json";
-    private final Gson gson;
-    private final File archivo;
+    private static final Type TIPO_LISTA = new TypeToken<List<Producto>>() {}.getType();
 
     // =========================================================================
     // 3. INICIALIZACIÓN (Constructor)
     // =========================================================================
     public GestorProductos() {
-        this.gson = new GsonBuilder().setPrettyPrinting().create();
-        this.archivo = ConfiguracionRutas.obtenerArchivo(NOMBRE_ARCHIVO);
+        super(NOMBRE_ARCHIVO, TIPO_LISTA);
     }
 
     // =========================================================================
@@ -44,37 +37,6 @@ public class GestorProductos {
     // =========================================================================
     // 5. LÓGICA DE NEGOCIO Y MÉTODOS AUXILIARES
     // =========================================================================
-    /**
-     * Lee la lista completa de productos desde Productos.json.
-     */
-    public synchronized List<Producto> listar() {
-        if (!archivo.exists() || archivo.length() == 0) {
-            return new ArrayList<>();
-        }
-
-        try (Reader reader = new InputStreamReader(new FileInputStream(archivo), StandardCharsets.UTF_8)) {
-            Type tipoLista = new TypeToken<List<Producto>>() {}.getType();
-            List<Producto> productos = gson.fromJson(reader, tipoLista);
-            return (productos != null) ? productos : new ArrayList<>();
-        } catch (IOException e) {
-            System.err.println("Error al leer " + NOMBRE_ARCHIVO + ": " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
-    /**
-     * Guarda la lista completa de productos sobrescribiendo el archivo.
-     */
-    public synchronized boolean guardarTodos(List<Producto> productos) {
-        try (Writer writer = new OutputStreamWriter(new FileOutputStream(archivo), StandardCharsets.UTF_8)) {
-            gson.toJson(productos, writer);
-            return true;
-        } catch (IOException e) {
-            System.err.println("Error al escribir en " + NOMBRE_ARCHIVO + ": " + e.getMessage());
-            return false;
-        }
-    }
-
     /**
      * Busca un producto por su identificador único.
      */
@@ -86,6 +48,22 @@ public class GestorProductos {
             }
         }
         return null;
+    }
+
+    /**
+     * Genera el siguiente ID numérico libre: máximo ID numérico existente + 1.
+     */
+    public String generarSiguienteId() {
+        long maximo = 0;
+        for (Producto p : listar()) {
+            if (p.getId() == null) continue;
+            try {
+                maximo = Math.max(maximo, Long.parseLong(p.getId().trim()));
+            } catch (NumberFormatException ignorada) {
+                // IDs no numéricos no participan en la secuencia
+            }
+        }
+        return String.valueOf(maximo + 1);
     }
 
     /**
@@ -151,16 +129,16 @@ public class GestorProductos {
                 }
             }
 
-            // Filtro por Categoría específica del acordeón
+            // Filtro por Categoría específica del panel lateral
             if (categoriaFiltro != null && !categoriaFiltro.trim().isEmpty() && !categoriaFiltro.equalsIgnoreCase("TODAS")) {
                 if (p.getCategoria() == null || !p.getCategoria().equalsIgnoreCase(categoriaFiltro.trim())) {
                     return false;
                 }
             }
 
-            // Filtro por Estado específico del acordeón
+            // Filtro por Estado específico del panel lateral (derivado del stock)
             if (estadoFiltro != null && !estadoFiltro.trim().isEmpty() && !estadoFiltro.equalsIgnoreCase("TODOS")) {
-                if (p.getEstado() == null || !p.getEstado().equalsIgnoreCase(estadoFiltro.trim())) {
+                if (!p.getEstado().equalsIgnoreCase(estadoFiltro.trim())) {
                     return false;
                 }
             }

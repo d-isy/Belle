@@ -106,7 +106,7 @@ public class PersistenciaTest {
         // Verificar orden 111 de Figma
         Orden o111 = gestorOrdenes.buscarPorId("111");
         assertNotNull(o111, "La orden 111 debe existir");
-        assertEquals("28483", o111.getClienteId());
+        assertEquals("28483", o111.getClienteIdentificacion());
         assertEquals("No Entregado", o111.getEstado());
         assertEquals(1, o111.getTotalArticulos());
 

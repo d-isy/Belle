@@ -1,22 +1,19 @@
 package com.mycompany.belle_store.persistencia;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.mycompany.belle_store.modelos.Usuario;
 import com.mycompany.belle_store.seguridad.HashContrasena;
 
-import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Gestor de persistencia en formato JSON para la entidad Usuario.
- * Emplea la librería Google Gson con formato legible (pretty printing).
+ * Hereda lectura/escritura atómica de {@link GestorJson} y añade reglas de unicidad y autenticación.
  */
-public class GestorUsuarios {
+public class GestorUsuarios extends GestorJson<Usuario> {
 
     // =========================================================================
     // 1. COMPONENTES FXML (@FXML) - No aplica
@@ -26,15 +23,13 @@ public class GestorUsuarios {
     // 2. ATRIBUTOS, SERVICIOS Y ESTADO
     // =========================================================================
     private static final String NOMBRE_ARCHIVO = "Usuarios.json";
-    private final Gson gson;
-    private final File archivo;
+    private static final Type TIPO_LISTA = new TypeToken<List<Usuario>>() {}.getType();
 
     // =========================================================================
     // 3. INICIALIZACIÓN (Constructor)
     // =========================================================================
     public GestorUsuarios() {
-        this.gson = new GsonBuilder().setPrettyPrinting().create();
-        this.archivo = ConfiguracionRutas.obtenerArchivo(NOMBRE_ARCHIVO);
+        super(NOMBRE_ARCHIVO, TIPO_LISTA);
     }
 
     // =========================================================================
@@ -44,37 +39,6 @@ public class GestorUsuarios {
     // =========================================================================
     // 5. LÓGICA DE NEGOCIO Y MÉTODOS AUXILIARES
     // =========================================================================
-    /**
-     * Lee y retorna la lista completa de usuarios almacenados en Usuarios.json.
-     */
-    public synchronized List<Usuario> listar() {
-        if (!archivo.exists() || archivo.length() == 0) {
-            return new ArrayList<>();
-        }
-
-        try (Reader reader = new InputStreamReader(new FileInputStream(archivo), StandardCharsets.UTF_8)) {
-            Type tipoLista = new TypeToken<List<Usuario>>() {}.getType();
-            List<Usuario> usuarios = gson.fromJson(reader, tipoLista);
-            return (usuarios != null) ? usuarios : new ArrayList<>();
-        } catch (IOException e) {
-            System.err.println("Error al leer " + NOMBRE_ARCHIVO + ": " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
-    /**
-     * Guarda la lista completa de usuarios sobrescribiendo el archivo Usuarios.json.
-     */
-    public synchronized boolean guardarTodos(List<Usuario> usuarios) {
-        try (Writer writer = new OutputStreamWriter(new FileOutputStream(archivo), StandardCharsets.UTF_8)) {
-            gson.toJson(usuarios, writer);
-            return true;
-        } catch (IOException e) {
-            System.err.println("Error al escribir en " + NOMBRE_ARCHIVO + ": " + e.getMessage());
-            return false;
-        }
-    }
-
     /**
      * Agrega un nuevo usuario a la lista persistente si no existe duplicado.
      */
@@ -87,9 +51,9 @@ public class GestorUsuarios {
             return false;
         }
 
-        // Asignar ID pedagógico si no tiene uno
+        // Asignar ID pedagógico si no tiene uno (máximo existente + 1: nunca repite IDs tras eliminar)
         if (nuevoUsuario.getId() == null || nuevoUsuario.getId().trim().isEmpty()) {
-            nuevoUsuario.setId("USR-" + (lista.size() + 1));
+            nuevoUsuario.setId(generarSiguienteId(lista));
         }
 
         // La contraseña SIEMPRE se almacena como hash PBKDF2 (nunca en texto plano)
@@ -99,6 +63,22 @@ public class GestorUsuarios {
 
         lista.add(nuevoUsuario);
         return guardarTodos(lista);
+    }
+
+    /**
+     * Calcula el siguiente ID con formato {@code USR-n}: toma el mayor número usado por IDs de ese
+     * formato (ej. {@code USR-001} cuenta como 1) y suma 1. IDs especiales como {@code USR-ADMIN}
+     * no participan. Así, eliminar un usuario nunca provoca que el siguiente repita un ID existente.
+     */
+    private String generarSiguienteId(List<Usuario> lista) {
+        long maximo = 0;
+        for (Usuario u : lista) {
+            String id = u.getId();
+            if (id != null && id.toUpperCase().matches("USR-\\d+")) {
+                maximo = Math.max(maximo, Long.parseLong(id.substring(4)));
+            }
+        }
+        return "USR-" + (maximo + 1);
     }
 
     /**
@@ -127,6 +107,20 @@ public class GestorUsuarios {
         return null;
     }
 
+    /**
+     * Construye un mapa {@code numeroIdentificacion -> nombreCompleto} para mostrar y buscar
+     * nombres de clientes sin releer el JSON por cada fila de la tabla de órdenes.
+     */
+    public Map<String, String> mapearNombresPorIdentificacion() {
+        Map<String, String> mapa = new HashMap<>();
+        for (Usuario u : listar()) {
+            if (u.getNumeroIdentificacion() != null && u.getNombreCompleto() != null) {
+                mapa.put(u.getNumeroIdentificacion(), u.getNombreCompleto());
+            }
+        }
+        return mapa;
+    }
+
     public boolean existeCorreo(String correo) {
         return buscarPorCorreo(correo) != null;
     }
@@ -142,10 +136,7 @@ public class GestorUsuarios {
         if (id == null) return false;
         List<Usuario> lista = listar();
         boolean removido = lista.removeIf(u -> id.equalsIgnoreCase(u.getId()));
-        if (removido) {
-            return guardarTodos(lista);
-        }
-        return false;
+        return removido && guardarTodos(lista);
     }
 
     /**

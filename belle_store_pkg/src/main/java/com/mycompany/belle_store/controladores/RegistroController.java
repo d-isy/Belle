@@ -5,6 +5,7 @@ import com.mycompany.belle_store.modelos.Usuario;
 import com.mycompany.belle_store.persistencia.GestorUsuarios;
 import com.mycompany.belle_store.validacion.Validaciones;
 import javafx.animation.PauseTransition;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -208,41 +209,51 @@ public class RegistroController {
             return;
         }
 
-        // 10. Simulación asíncrona de guardado con PauseTransition
+        // 10. Guardado con hash PBKDF2 en segundo plano (Task) para no congelar la interfaz
         mostrarCargando();
         limpiarMensaje();
 
-        PauseTransition pausa = new PauseTransition(Duration.seconds(1.0));
-        pausa.setOnFinished(e -> {
-            // Instanciar el nuevo usuario cliente
-            Usuario nuevoCliente = new Usuario(
-                    null, // El gestor asigna USR-(size+1) automáticamente
-                    nombre,
-                    identificacion,
-                    correo,
-                    celular,
-                    direccion,
-                    contrasena,
-                    Usuario.ROL_CLIENTE
-            );
+        Usuario nuevoCliente = new Usuario(
+                null, // El gestor asigna USR-(max+1) automáticamente
+                nombre,
+                identificacion,
+                correo,
+                celular,
+                direccion,
+                contrasena,
+                Usuario.ROL_CLIENTE
+        );
 
-            boolean guardado = gestorUsuarios.guardar(nuevoCliente);
+        Task<Boolean> tareaGuardar = new Task<>() {
+            @Override
+            protected Boolean call() {
+                return gestorUsuarios.guardar(nuevoCliente);
+            }
+        };
 
-            if (guardado) {
+        tareaGuardar.setOnSucceeded(e -> {
+            ocultarCargando();
+            if (Boolean.TRUE.equals(tareaGuardar.getValue())) {
                 mostrarMensaje("¡Registro exitoso! Redirigiendo al inicio de sesión...", false);
-                ocultarCargando();
-                deshabilitarFormulario();
+                establecerFormularioDeshabilitado(true);
 
                 // Transición fluida al Login tras breve pausa visual
                 PauseTransition redireccion = new PauseTransition(Duration.seconds(1.5));
                 redireccion.setOnFinished(ev -> irALogin());
                 redireccion.play();
             } else {
-                ocultarCargando();
                 mostrarMensaje("No fue posible guardar el registro. Intenta nuevamente.", true);
             }
         });
-        pausa.play();
+
+        tareaGuardar.setOnFailed(e -> {
+            ocultarCargando();
+            mostrarMensaje("Ocurrió un error inesperado al guardar el registro.", true);
+        });
+
+        Thread hilo = new Thread(tareaGuardar, "belle-registro-save");
+        hilo.setDaemon(true);
+        hilo.start();
     }
 
     /**
@@ -418,24 +429,27 @@ public class RegistroController {
     private void mostrarCargando() {
         contenedorCargando.setVisible(true);
         contenedorCargando.setManaged(true);
-        botonRegistrarse.setDisable(true);
+        establecerFormularioDeshabilitado(true);
     }
 
     private void ocultarCargando() {
         contenedorCargando.setVisible(false);
         contenedorCargando.setManaged(false);
-        botonRegistrarse.setDisable(false);
+        establecerFormularioDeshabilitado(false);
     }
 
-    private void deshabilitarFormulario() {
-        campoNombre.setDisable(true);
-        campoIdentificacion.setDisable(true);
-        campoCorreo.setDisable(true);
-        campoCelular.setDisable(true);
-        campoDireccion.setDisable(true);
-        campoContrasena.setDisable(true);
-        campoConfirmarContrasena.setDisable(true);
-        botonRegistrarse.setDisable(true);
+    private void establecerFormularioDeshabilitado(boolean deshabilitado) {
+        campoNombre.setDisable(deshabilitado);
+        campoIdentificacion.setDisable(deshabilitado);
+        campoCorreo.setDisable(deshabilitado);
+        campoCelular.setDisable(deshabilitado);
+        campoDireccion.setDisable(deshabilitado);
+        campoContrasena.setDisable(deshabilitado);
+        campoConfirmarContrasena.setDisable(deshabilitado);
+        botonRegistrarse.setDisable(deshabilitado);
+        if (enlaceLogin != null) {
+            enlaceLogin.setDisable(deshabilitado);
+        }
     }
 
     private void mostrarMensaje(String texto, boolean esError) {
@@ -443,11 +457,8 @@ public class RegistroController {
         etiquetaMensaje.setVisible(true);
         etiquetaMensaje.setManaged(true);
 
-        if (esError) {
-            etiquetaMensaje.setStyle("-fx-text-fill: #D32F2F; -fx-font-size: 14px; -fx-font-weight: bold;");
-        } else {
-            etiquetaMensaje.setStyle("-fx-text-fill: #2E7D32; -fx-font-size: 14px; -fx-font-weight: bold;");
-        }
+        // El color y tamaño viven en estilos.css (.mensaje-error / .mensaje-exito)
+        etiquetaMensaje.getStyleClass().setAll("label", esError ? "mensaje-error" : "mensaje-exito");
     }
 
     private void limpiarMensaje() {

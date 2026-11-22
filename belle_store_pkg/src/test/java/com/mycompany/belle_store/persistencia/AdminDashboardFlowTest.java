@@ -108,14 +108,13 @@ public class AdminDashboardFlowTest {
     @Test
     @Order(4)
     public void testOperacionesCrudProducto() {
-        // 1. Crear nuevo producto de prueba
+        // 1. Crear nuevo producto de prueba (estado derivado del stock: 10 => DISPONIBLE)
         Producto nuevo = new Producto(
                 "TEST-999",
                 "img/placeholder_producto.png",
                 "PRODUCTO DE PRUEBA",
                 "ACCESORIOS",
                 10,
-                "DISPONIBLE",
                 85000.0
         );
 
@@ -125,18 +124,23 @@ public class AdminDashboardFlowTest {
         Producto recuperado = gestorProductos.buscarPorId("TEST-999");
         assertNotNull(recuperado, "El producto debe existir en Productos.json");
         assertEquals("PRODUCTO DE PRUEBA", recuperado.getNombre());
+        assertEquals("DISPONIBLE", recuperado.getEstado());
 
-        // 2. Actualizar producto
-        recuperado.setStock(15);
+        // 2. Actualizar producto: stock 0 deriva automáticamente el estado AGOTADO
+        recuperado.setStock(0);
         recuperado.setPrecio(90000.0);
-        recuperado.setEstado("AGOTADO");
         boolean actualizado = gestorProductos.actualizar(recuperado);
         assertTrue(actualizado, "Debe actualizar el producto en la persistencia");
 
         Producto actualizadoRecuperado = gestorProductos.buscarPorId("TEST-999");
-        assertEquals(15, actualizadoRecuperado.getStock());
+        assertEquals(0, actualizadoRecuperado.getStock());
         assertEquals(90000.0, actualizadoRecuperado.getPrecio());
         assertEquals("AGOTADO", actualizadoRecuperado.getEstado());
+
+        // Volver a tener stock > 0 restaura DISPONIBLE automáticamente
+        actualizadoRecuperado.setStock(15);
+        assertTrue(gestorProductos.actualizar(actualizadoRecuperado));
+        assertEquals("DISPONIBLE", gestorProductos.buscarPorId("TEST-999").getEstado());
 
         // 3. Eliminar producto
         boolean eliminado = gestorProductos.eliminar("TEST-999");
@@ -147,7 +151,7 @@ public class AdminDashboardFlowTest {
     @Test
     @Order(5)
     public void testOperacionesCrudOrden() {
-        // 1. Crear orden de prueba
+        // 1. Crear orden de prueba (totalArticulos=2 y valorTotal=400000 se calculan desde items)
         List<ItemOrden> items = new ArrayList<>();
         items.add(new ItemOrden("234", "Camisa Azul", 2, 200000.0));
 
@@ -157,7 +161,6 @@ public class AdminDashboardFlowTest {
                 items,
                 "Calle Falsa 123",
                 "Pendiente",
-                400000.0,
                 "15/11/2026 12:00:00"
         );
 
@@ -167,6 +170,8 @@ public class AdminDashboardFlowTest {
         Orden recuperada = gestorOrdenes.buscarPorId("TEST-ORD-999");
         assertNotNull(recuperada);
         assertEquals("Calle Falsa 123", recuperada.getDireccion());
+        assertEquals(2, recuperada.getTotalArticulos());
+        assertEquals(400000.0, recuperada.getValorTotal());
 
         // 2. Actualizar estado
         recuperada.setEstado("Entregado");
@@ -187,15 +192,16 @@ public class AdminDashboardFlowTest {
     @Test
     @Order(6)
     public void testFormatoMonetarioYMultilinea() {
-        Producto p = new Producto("234", "img/camisa.png", "CAMISA", "CAMISAS", 2, "DISPONIBLE", 200000.0);
+        Producto p = new Producto("234", "img/camisa.png", "CAMISA", "CAMISAS", 2, 200000.0);
         assertEquals("$200.000 COP", p.getPrecioFormateado(), "El precio formateado debe coincidir con el diseño de Figma");
 
         List<ItemOrden> items = new ArrayList<>();
         items.add(new ItemOrden("234", "Camisa", 1, 200000.0));
         items.add(new ItemOrden("235", "Pantalón", 2, 150000.0));
 
-        Orden o = new Orden("111", "28483", items, "Cll 1 # 2", "Entregado", 500000.0, "15/11/2026");
+        Orden o = new Orden("111", "28483", items, "Cll 1 # 2", "Entregado", "15/11/2026");
         assertEquals("$500.000 COP", o.getValorTotalFormateado(), "El valor total formateado debe coincidir con Figma");
+        assertEquals(3, o.getTotalArticulos(), "El total de artículos se deriva de las cantidades");
 
         String articulosFormateados = o.getArticulosFormateados();
         assertTrue(articulosFormateados.contains("• Camisa - 1"), "Debe contener viñeta del primer artículo");

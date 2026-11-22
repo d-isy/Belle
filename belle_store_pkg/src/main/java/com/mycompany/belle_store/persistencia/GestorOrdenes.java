@@ -1,22 +1,18 @@
 package com.mycompany.belle_store.persistencia;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.mycompany.belle_store.modelos.Orden;
 
-import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * Gestor de persistencia en formato JSON para la entidad Orden.
- * Permite listar, agregar, actualizar, eliminar y filtrar órdenes en Ordenes.json.
+ * Hereda lectura/escritura atómica de {@link GestorJson} y provee CRUD y filtrado.
  */
-public class GestorOrdenes {
+public class GestorOrdenes extends GestorJson<Orden> {
 
     // =========================================================================
     // 1. COMPONENTES FXML (@FXML) - No aplica
@@ -26,15 +22,13 @@ public class GestorOrdenes {
     // 2. ATRIBUTOS, SERVICIOS Y ESTADO
     // =========================================================================
     private static final String NOMBRE_ARCHIVO = "Ordenes.json";
-    private final Gson gson;
-    private final File archivo;
+    private static final Type TIPO_LISTA = new TypeToken<List<Orden>>() {}.getType();
 
     // =========================================================================
     // 3. INICIALIZACIÓN (Constructor)
     // =========================================================================
     public GestorOrdenes() {
-        this.gson = new GsonBuilder().setPrettyPrinting().create();
-        this.archivo = ConfiguracionRutas.obtenerArchivo(NOMBRE_ARCHIVO);
+        super(NOMBRE_ARCHIVO, TIPO_LISTA);
     }
 
     // =========================================================================
@@ -44,37 +38,6 @@ public class GestorOrdenes {
     // =========================================================================
     // 5. LÓGICA DE NEGOCIO Y MÉTODOS AUXILIARES
     // =========================================================================
-    /**
-     * Lee la lista completa de órdenes desde Ordenes.json.
-     */
-    public synchronized List<Orden> listar() {
-        if (!archivo.exists() || archivo.length() == 0) {
-            return new ArrayList<>();
-        }
-
-        try (Reader reader = new InputStreamReader(new FileInputStream(archivo), StandardCharsets.UTF_8)) {
-            Type tipoLista = new TypeToken<List<Orden>>() {}.getType();
-            List<Orden> ordenes = gson.fromJson(reader, tipoLista);
-            return (ordenes != null) ? ordenes : new ArrayList<>();
-        } catch (IOException e) {
-            System.err.println("Error al leer " + NOMBRE_ARCHIVO + ": " + e.getMessage());
-            return new ArrayList<>();
-        }
-    }
-
-    /**
-     * Guarda la lista completa de órdenes sobrescribiendo el archivo.
-     */
-    public synchronized boolean guardarTodos(List<Orden> ordenes) {
-        try (Writer writer = new OutputStreamWriter(new FileOutputStream(archivo), StandardCharsets.UTF_8)) {
-            gson.toJson(ordenes, writer);
-            return true;
-        } catch (IOException e) {
-            System.err.println("Error al escribir en " + NOMBRE_ARCHIVO + ": " + e.getMessage());
-            return false;
-        }
-    }
-
     /**
      * Busca una orden por su identificador único.
      */
@@ -134,23 +97,48 @@ public class GestorOrdenes {
     }
 
     /**
-     * Filtra la lista de órdenes por término de búsqueda (ID o Cliente)
-     * y por estado (ej. "Entregado", "No Entregado").
+     * Busca los IDs de las órdenes que contienen el producto indicado (integridad referencial).
+     */
+    public List<String> buscarIdsOrdenesConProducto(String productoId) {
+        if (productoId == null) return List.of();
+        return listar().stream()
+                .filter(o -> o.getArticulos().stream()
+                        .anyMatch(i -> productoId.equalsIgnoreCase(i.getProductoId())))
+                .map(Orden::getId)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Filtra órdenes por término de búsqueda (ID de orden o identificación del cliente) y por estado.
      */
     public List<Orden> filtrar(String terminoBusqueda, String estadoFiltro) {
+        return filtrar(terminoBusqueda, estadoFiltro, null);
+    }
+
+    /**
+     * Filtra órdenes por término de búsqueda (ID, identificación del cliente o nombre del cliente
+     * si se proporciona el mapa {@code identificacion -> nombre}) y por estado logístico.
+     */
+    public List<Orden> filtrar(String terminoBusqueda, String estadoFiltro, Map<String, String> nombresClientes) {
         List<Orden> todas = listar();
         return todas.stream().filter(o -> {
             // Filtro de la barra de búsqueda ("Buscar por ID, Cliente...")
             if (terminoBusqueda != null && !terminoBusqueda.trim().isEmpty()) {
                 String term = terminoBusqueda.trim().toLowerCase();
+                String cedula = o.getClienteIdentificacion();
                 boolean coincideId = o.getId() != null && o.getId().toLowerCase().contains(term);
-                boolean coincideCliente = o.getClienteId() != null && o.getClienteId().toLowerCase().contains(term);
-                if (!coincideId && !coincideCliente) {
+                boolean coincideCedula = cedula != null && cedula.toLowerCase().contains(term);
+                boolean coincideNombre = false;
+                if (nombresClientes != null && cedula != null) {
+                    String nombre = nombresClientes.get(cedula);
+                    coincideNombre = nombre != null && nombre.toLowerCase().contains(term);
+                }
+                if (!coincideId && !coincideCedula && !coincideNombre) {
                     return false;
                 }
             }
 
-            // Filtro por Estado en el acordeón lateral
+            // Filtro por Estado en el panel lateral
             if (estadoFiltro != null && !estadoFiltro.trim().isEmpty() && !estadoFiltro.equalsIgnoreCase("TODOS")) {
                 if (o.getEstado() == null || !o.getEstado().equalsIgnoreCase(estadoFiltro.trim())) {
                     return false;

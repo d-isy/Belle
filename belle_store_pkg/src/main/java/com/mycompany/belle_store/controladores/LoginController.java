@@ -4,7 +4,8 @@ import com.mycompany.belle_store.App;
 import com.mycompany.belle_store.modelos.Usuario;
 import com.mycompany.belle_store.persistencia.GestorUsuarios;
 import com.mycompany.belle_store.sesion.SesionActual;
-import javafx.animation.PauseTransition;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -16,12 +17,12 @@ import javafx.scene.control.TextInputControl;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.util.Duration;
 
 import java.io.IOException;
 
 /**
  * Controlador de la vista de Inicio de Sesión (Login) de Belle Store.
+ * Ejecuta la verificación PBKDF2 en segundo plano con {@link Task} para no congelar la interfaz.
  * Estructurado en 5 secciones pedagógicas con fines académicos.
  */
 public class LoginController {
@@ -73,11 +74,26 @@ public class LoginController {
         ocultarCargando();
         configurarEscalaImagen();
         configurarLimpiezaEnTiempoReal();
+        Platform.runLater(() -> {
+            if (campoUsuario != null) {
+                campoUsuario.requestFocus();
+            }
+        });
     }
 
     // =========================================================================
     // 4. EVENTOS DE INTERFAZ Y NAVEGACIÓN (Acciones de botones y filtros)
     // =========================================================================
+    /**
+     * Al presionar Enter en el campo Usuario, mueve el foco al campo de contraseña.
+     */
+    @FXML
+    private void enfocarClave(ActionEvent event) {
+        if (campoClave != null) {
+            campoClave.requestFocus();
+        }
+    }
+
     /**
      * Acción ejecutada al presionar el botón 'Ingresar' o dar Enter en la clave.
      */
@@ -108,20 +124,21 @@ public class LoginController {
         mostrarCargando();
         limpiarMensaje();
 
-        // 3. Simulación de espera asíncrona no bloqueante (PauseTransition)
-        PauseTransition pausa = new PauseTransition(Duration.seconds(1.0));
-        pausa.setOnFinished(e -> {
-            ocultarCargando();
+        // 3. Autenticación real (PBKDF2 + lectura JSON) en un hilo en segundo plano
+        Task<Usuario> tareaAutenticar = new Task<>() {
+            @Override
+            protected Usuario call() {
+                return gestorUsuarios.autenticar(usuarioTexto, claveTexto);
+            }
+        };
 
-            // 4. Validación de credenciales contra la persistencia JSON
-            Usuario usuarioAutenticado = gestorUsuarios.autenticar(usuarioTexto, claveTexto);
+        tareaAutenticar.setOnSucceeded(e -> {
+            ocultarCargando();
+            Usuario usuarioAutenticado = tareaAutenticar.getValue();
 
             if (usuarioAutenticado != null) {
-                // Registrar en memoria la sesión activa
                 SesionActual.iniciarSesion(usuarioAutenticado);
                 mostrarMensaje("¡Inicio exitoso! Redirigiendo...", false);
-
-                // 5. Redirección según rol
                 redirigirSegunRol(usuarioAutenticado);
             } else {
                 marcarError(campoUsuario, etiquetaUsuario);
@@ -129,18 +146,26 @@ public class LoginController {
                 mostrarMensaje("Usuario o contraseña incorrectos. Verifica tus datos.", true);
             }
         });
-        pausa.play();
+
+        tareaAutenticar.setOnFailed(e -> {
+            ocultarCargando();
+            mostrarMensaje("Ocurrió un error inesperado al verificar tus credenciales.", true);
+        });
+
+        Thread hilo = new Thread(tareaAutenticar, "belle-login-auth");
+        hilo.setDaemon(true);
+        hilo.start();
     }
 
     /**
-     * Navega a la vista de Registro de Clientes (Fase 3).
+     * Navega a la vista de Registro de Clientes.
      */
     @FXML
     private void irARegistro(ActionEvent event) {
         try {
             App.setRoot("registro");
         } catch (IOException e) {
-            mostrarMensaje("La vista de registro estará disponible en la Fase 3.", true);
+            mostrarMensaje("No fue posible abrir la vista de registro.", true);
         }
     }
 
@@ -202,6 +227,9 @@ public class LoginController {
         botonIngresar.setDisable(true);
         campoUsuario.setDisable(true);
         campoClave.setDisable(true);
+        if (enlaceRegistrarse != null) {
+            enlaceRegistrarse.setDisable(true);
+        }
     }
 
     private void ocultarCargando() {
@@ -210,6 +238,9 @@ public class LoginController {
         botonIngresar.setDisable(false);
         campoUsuario.setDisable(false);
         campoClave.setDisable(false);
+        if (enlaceRegistrarse != null) {
+            enlaceRegistrarse.setDisable(false);
+        }
     }
 
     private void mostrarMensaje(String texto, boolean esError) {
@@ -217,11 +248,8 @@ public class LoginController {
         etiquetaMensaje.setVisible(true);
         etiquetaMensaje.setManaged(true);
 
-        if (esError) {
-            etiquetaMensaje.setStyle("-fx-text-fill: #D32F2F; -fx-font-size: 13px; -fx-font-weight: bold;");
-        } else {
-            etiquetaMensaje.setStyle("-fx-text-fill: #2E7D32; -fx-font-size: 13px; -fx-font-weight: bold;");
-        }
+        // El color y tamaño viven en estilos.css (.mensaje-error / .mensaje-exito)
+        etiquetaMensaje.getStyleClass().setAll("label", esError ? "mensaje-error" : "mensaje-exito");
     }
 
     private void limpiarMensaje() {

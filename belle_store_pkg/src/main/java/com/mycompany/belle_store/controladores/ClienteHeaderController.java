@@ -4,11 +4,14 @@ import com.mycompany.belle_store.App;
 import com.mycompany.belle_store.modelos.Usuario;
 import com.mycompany.belle_store.persistencia.GestorCarrito;
 import com.mycompany.belle_store.persistencia.GestorDeseados;
+import com.mycompany.belle_store.persistencia.GestorUsuarios;
 import com.mycompany.belle_store.sesion.SesionActual;
+import com.mycompany.belle_store.validacion.Validaciones;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Side;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -17,10 +20,13 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Window;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -62,6 +68,7 @@ public class ClienteHeaderController {
 
     private final GestorCarrito gestorCarrito = new GestorCarrito();
     private final GestorDeseados gestorDeseados = new GestorDeseados();
+    private final GestorUsuarios gestorUsuarios = new GestorUsuarios();
 
     private Runnable alSolicitarBusqueda;
     private Consumer<String> alSolicitarCategoria;
@@ -249,7 +256,7 @@ public class ClienteHeaderController {
 
         Dialog<ButtonType> dialogo = new Dialog<>();
         dialogo.setTitle("Mi Perfil - Belle Store");
-        dialogo.setHeaderText("Información de tu cuenta");
+        dialogo.setHeaderText("Información de tu cuenta (puedes actualizar tu celular y dirección)");
         Window ventana = btnMenu != null && btnMenu.getScene() != null ? btnMenu.getScene().getWindow() : null;
         if (ventana != null) {
             dialogo.initOwner(ventana);
@@ -257,9 +264,10 @@ public class ClienteHeaderController {
         dialogo.getDialogPane().getStylesheets().add(
                 App.class.getResource("css/estilos.css").toExternalForm()
         );
-        dialogo.getDialogPane().getButtonTypes().add(
-                new ButtonType("Cerrar", ButtonBar.ButtonData.OK_DONE)
-        );
+
+        ButtonType btnGuardar = new ButtonType("Guardar cambios", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnCerrar = new ButtonType("Cerrar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialogo.getDialogPane().getButtonTypes().addAll(btnGuardar, btnCerrar);
 
         GridPane grid = new GridPane();
         grid.setHgap(14);
@@ -269,12 +277,77 @@ public class ClienteHeaderController {
         agregarFilaPerfil(grid, 0, "Nombre completo:", actual.getNombreCompleto());
         agregarFilaPerfil(grid, 1, "Identificación:", actual.getNumeroIdentificacion());
         agregarFilaPerfil(grid, 2, "Correo electrónico:", actual.getCorreo());
-        agregarFilaPerfil(grid, 3, "Celular:", actual.getCelular());
-        agregarFilaPerfil(grid, 4, "Dirección de entrega:", actual.getDireccion());
-        agregarFilaPerfil(grid, 5, "Rol:", actual.getRol());
+        agregarFilaPerfil(grid, 3, "Rol:", actual.getRol());
+
+        Label lblCelular = new Label("Celular:");
+        lblCelular.getStyleClass().add("etiqueta-dato-clave");
+        TextField txtCelular = new TextField(actual.getCelular() != null ? actual.getCelular() : "");
+        txtCelular.setPrefWidth(260);
+        txtCelular.setTextFormatter(new TextFormatter<>(cambio -> {
+            String nuevo = cambio.getControlNewText();
+            return (Validaciones.esSoloDigitos(nuevo) && nuevo.length() <= 10) ? cambio : null;
+        }));
+        grid.add(lblCelular, 0, 4);
+        grid.add(txtCelular, 1, 4);
+
+        Label lblDireccion = new Label("Dirección de entrega:");
+        lblDireccion.getStyleClass().add("etiqueta-dato-clave");
+        TextField txtDireccion = new TextField(actual.getDireccion() != null ? actual.getDireccion() : "");
+        txtDireccion.setPrefWidth(260);
+        grid.add(lblDireccion, 0, 5);
+        grid.add(txtDireccion, 1, 5);
+
+        Label lblError = new Label();
+        lblError.getStyleClass().add("mensaje-error");
+        lblError.setWrapText(true);
+        lblError.setVisible(false);
+        lblError.setManaged(false);
+        grid.add(lblError, 0, 6, 2, 1);
 
         dialogo.getDialogPane().setContent(grid);
-        dialogo.showAndWait();
+
+        Button okBtn = (Button) dialogo.getDialogPane().lookupButton(btnGuardar);
+        okBtn.addEventFilter(ActionEvent.ACTION, evento -> {
+            txtCelular.getStyleClass().remove("campo-error");
+            txtDireccion.getStyleClass().remove("campo-error");
+            String cel = txtCelular.getText() != null ? txtCelular.getText().trim() : "";
+            String dir = txtDireccion.getText() != null ? txtDireccion.getText().trim() : "";
+
+            if (!Validaciones.esCelularValido(cel)) {
+                txtCelular.getStyleClass().add("campo-error");
+                lblError.setText("El número de celular debe tener exactamente 10 dígitos.");
+                lblError.setVisible(true);
+                lblError.setManaged(true);
+                evento.consume();
+                return;
+            }
+            if (dir.length() < 4) {
+                txtDireccion.getStyleClass().add("campo-error");
+                lblError.setText("La dirección debe tener al menos 4 caracteres.");
+                lblError.setVisible(true);
+                lblError.setManaged(true);
+                evento.consume();
+            }
+        });
+
+        Optional<ButtonType> resultado = dialogo.showAndWait();
+        if (resultado.isPresent() && resultado.get() == btnGuardar) {
+            String nuevoCel = txtCelular.getText().trim();
+            String nuevaDir = txtDireccion.getText().trim();
+            if (gestorUsuarios.actualizarContacto(actual.getId(), nuevoCel, nuevaDir)) {
+                actual.setCelular(nuevoCel);
+                actual.setDireccion(nuevaDir);
+                Alert ok = new Alert(Alert.AlertType.INFORMATION);
+                ok.setTitle("Perfil actualizado");
+                ok.setHeaderText(null);
+                ok.setContentText("Tus datos de contacto se guardaron correctamente.");
+                ok.getButtonTypes().setAll(new ButtonType("Aceptar", ButtonBar.ButtonData.OK_DONE));
+                if (ventana != null) {
+                    ok.initOwner(ventana);
+                }
+                ok.showAndWait();
+            }
+        }
     }
 
     private void agregarFilaPerfil(GridPane grid, int fila, String clave, String valor) {

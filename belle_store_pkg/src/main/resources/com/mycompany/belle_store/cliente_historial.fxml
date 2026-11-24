@@ -32,13 +32,25 @@
                 <Insets top="24" right="36" bottom="24" left="36" />
             </padding>
 
-            <HBox alignment="CENTER_LEFT" spacing="16">
+            <HBox alignment="CENTER_LEFT" spacing="12">
                 <Label text="Historial de compras" styleClass="titulo-admin" />
                 <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="btnVerDetalle"
+                        text="Ver detalle"
+                        onAction="#manejarVerDetalle"
+                        disable="true"
+                        styleClass="boton-secundario" />
+                <Button fx:id="btnCancelarOrden"
+                        text="Cancelar orden"
+                        onAction="#manejarCancelarOrden"
+                        disable="true"
+                        styleClass="boton-quitar-item" />
                 <Button text="Seguir comprando"
                         onAction="#irAlCatalogo"
                         styleClass="boton-secundario" />
             </HBox>
+
+            <Label fx:id="lblMensajeHistorial" text="" visible="false" managed="false" />
 
             <TableView fx:id="tablaHistorial"
                        styleClass="tabla-belle"

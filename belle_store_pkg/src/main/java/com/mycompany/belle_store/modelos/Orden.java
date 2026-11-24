@@ -158,6 +158,42 @@ public class Orden {
     }
 
     /**
+     * Costo de envío efectivo: usa el guardado en la orden o, si es una orden antigua sin
+     * desglose persistido, aplica la regla vigente de {@link ResumenCompra}.
+     */
+    public double getCostoEnvioEfectivo() {
+        if (impuestos > 0.0 || costoEnvio > 0.0) {
+            return costoEnvio;
+        }
+        return ResumenCompra.calcular(getSubtotalArticulos()).getCostoEnvio();
+    }
+
+    /**
+     * Impuestos (IVA 19%) efectivos: usa los guardados en la orden o, si es una orden antigua
+     * sin desglose persistido, los calcula con {@link ResumenCompra}.
+     */
+    public double getImpuestosEfectivos() {
+        if (impuestos > 0.0 || costoEnvio > 0.0) {
+            return impuestos;
+        }
+        return ResumenCompra.calcular(getSubtotalArticulos()).getImpuestos();
+    }
+
+    /**
+     * Total completo de la compra incluyendo siempre envío e impuestos (IVA 19%).
+     */
+    public double getTotalConImpuestosYEnvio() {
+        return getSubtotalArticulos() + getCostoEnvioEfectivo() + getImpuestosEfectivos();
+    }
+
+    /**
+     * Formatea el total completo (con envío e impuestos) al estándar "$248.000 COP".
+     */
+    public String getTotalConImpuestosYEnvioFormateado() {
+        return Formato.moneda(getTotalConImpuestosYEnvio());
+    }
+
+    /**
      * Tipo de registro mostrado en el Historial de Compras (columna TIPO en Figma).
      */
     public String getTipo() {

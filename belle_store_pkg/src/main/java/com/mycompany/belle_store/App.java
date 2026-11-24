@@ -80,7 +80,6 @@ public class App extends Application {
             case "cliente_carrito":
             case "cliente_deseados":
             case "cliente_historial":
-            case "cliente_placeholder":
                 return SesionActual.haySesionIniciada() ? vista : "login";
             default:
                 return vista;
@@ -104,8 +103,6 @@ public class App extends Application {
                 return "Belle Store - Lista de Deseados";
             case "cliente_historial":
                 return "Belle Store - Historial de Compras";
-            case "cliente_placeholder":
-                return "Belle Store - Perfil del Cliente";
             default:
                 return "Belle Store";
         }

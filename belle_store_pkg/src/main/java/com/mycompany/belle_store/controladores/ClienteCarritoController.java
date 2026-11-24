@@ -6,12 +6,14 @@ import com.mycompany.belle_store.modelos.Orden;
 import com.mycompany.belle_store.modelos.Producto;
 import com.mycompany.belle_store.modelos.ResumenCompra;
 import com.mycompany.belle_store.modelos.Usuario;
+import com.mycompany.belle_store.persistencia.ConfiguracionRutas;
 import com.mycompany.belle_store.persistencia.GestorCarrito;
 import com.mycompany.belle_store.persistencia.GestorImagenes;
 import com.mycompany.belle_store.persistencia.GestorOrdenes;
 import com.mycompany.belle_store.persistencia.GestorProductos;
 import com.mycompany.belle_store.sesion.SesionActual;
 import com.mycompany.belle_store.util.Formato;
+import com.mycompany.belle_store.util.GeneradorComprobante;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -33,8 +35,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +55,15 @@ public class ClienteCarritoController {
     // =========================================================================
     @FXML
     private ClienteHeaderController headerController;
+
+    @FXML
+    private HBox barraAccionesCarrito;
+
+    @FXML
+    private Label lblResumenItems;
+
+    @FXML
+    private Button btnVaciarCarrito;
 
     @FXML
     private ScrollPane scrollItems;
@@ -109,6 +122,39 @@ public class ClienteCarritoController {
             App.setRoot("cliente_catalogo");
         } catch (IOException e) {
             mostrarMensaje("No fue posible abrir el catálogo.", true);
+        }
+    }
+
+    @FXML
+    private void irADeseados(ActionEvent event) {
+        try {
+            App.setRoot("cliente_deseados");
+        } catch (IOException e) {
+            mostrarMensaje("No fue posible abrir la lista de deseados.", true);
+        }
+    }
+
+    @FXML
+    private void vaciarCarrito(ActionEvent event) {
+        String cedula = obtenerCedulaCliente();
+        if (cedula == null) return;
+
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Vaciar carrito - Belle Store");
+        confirmacion.setHeaderText("¿Deseas eliminar todos los artículos de tu carrito?");
+        confirmacion.setContentText("Podrás volver a agregarlos desde el catálogo cuando quieras.");
+        ButtonType btnVaciar = new ButtonType("Vaciar", ButtonBar.ButtonData.OK_DONE);
+        confirmacion.getButtonTypes().setAll(btnVaciar, BTN_CANCELAR);
+        Window dueno = btnPagar != null && btnPagar.getScene() != null ? btnPagar.getScene().getWindow() : null;
+        if (dueno != null) {
+            confirmacion.initOwner(dueno);
+        }
+
+        Optional<ButtonType> respuesta = confirmacion.showAndWait();
+        if (respuesta.isPresent() && respuesta.get() == btnVaciar) {
+            gestorCarrito.vaciarCarrito(cedula);
+            limpiarMensaje();
+            cargarCarrito();
         }
     }
 
@@ -179,6 +225,8 @@ public class ClienteCarritoController {
 
         contenedorItems.getChildren().clear();
         int itemsValidos = 0;
+        int totalUnidades = 0;
+        boolean hayProblemaStock = false;
 
         for (ItemCarrito item : items) {
             Producto producto = gestorProductos.buscarPorId(item.getProductoId());
@@ -187,15 +235,30 @@ public class ClienteCarritoController {
                 continue;
             }
             itemsValidos++;
+            totalUnidades += item.getCantidad();
+            if (producto.getStock() <= 0 || item.getCantidad() > producto.getStock()) {
+                hayProblemaStock = true;
+            }
             contenedorItems.getChildren().add(crearTarjetaItemCarrito(producto, item.getCantidad()));
         }
 
         boolean vacio = itemsValidos == 0;
+        if (barraAccionesCarrito != null) {
+            barraAccionesCarrito.setVisible(!vacio);
+            barraAccionesCarrito.setManaged(!vacio);
+        }
+        if (lblResumenItems != null) {
+            lblResumenItems.setText(itemsValidos + " producto(s) · " + totalUnidades + " unidad(es)");
+        }
         scrollItems.setVisible(!vacio);
         scrollItems.setManaged(!vacio);
         estadoVacio.setVisible(vacio);
         estadoVacio.setManaged(vacio);
-        btnPagar.setDisable(vacio);
+        btnPagar.setDisable(vacio || hayProblemaStock);
+
+        if (hayProblemaStock) {
+            mostrarMensaje("Uno o más productos superan el stock disponible actual. Ajusta o retira los marcados en rojo para continuar.", true);
+        }
 
         actualizarResumen(cedula);
         if (headerController != null) {
@@ -204,7 +267,8 @@ public class ClienteCarritoController {
     }
 
     /**
-     * Construye la tarjeta horizontal de cada ítem del carrito (fiel al frame 48:296 de Figma).
+     * Construye la tarjeta horizontal de cada ítem del carrito (fiel al frame 48:296 de Figma)
+     * e incluye alertas visuales en vivo si el stock disminuyó o se agotó.
      */
     private HBox crearTarjetaItemCarrito(Producto producto, int cantidad) {
         HBox tarjeta = new HBox(18);
@@ -219,7 +283,7 @@ public class ClienteCarritoController {
         imageView.setSmooth(true);
         cargarImagenConFallback(imageView, producto.getImagen(), 105, 105);
 
-        // Columna central: nombre, precio unitario y controles de cantidad
+        // Columna central: nombre, precio unitario, controles de cantidad y alerta de stock si aplica
         VBox centro = new VBox(8);
         HBox.setHgrow(centro, Priority.ALWAYS);
 
@@ -235,6 +299,7 @@ public class ClienteCarritoController {
 
         Button btnMas = new Button("+");
         btnMas.getStyleClass().add("boton-cantidad");
+        btnMas.setDisable(producto.getStock() <= 0 || cantidad >= producto.getStock());
         btnMas.setOnAction(e -> cambiarCantidad(producto, cantidad + 1));
 
         Label lblCantidad = new Label(String.valueOf(cantidad));
@@ -259,6 +324,23 @@ public class ClienteCarritoController {
         filaInferior.setAlignment(Pos.CENTER_LEFT);
 
         centro.getChildren().addAll(lblNombre, lblPrecioUnitario, filaInferior);
+
+        // Aviso visual si el producto se agotó o bajó de stock mientras estaba en el carrito
+        if (producto.getStock() <= 0) {
+            Label lblAlerta = new Label("Producto agotado actualmente. Retíralo para poder pagar.");
+            lblAlerta.getStyleClass().add("mensaje-error");
+            centro.getChildren().add(lblAlerta);
+        } else if (cantidad > producto.getStock()) {
+            Label lblAlerta = new Label("Stock disponible actual: " + producto.getStock() + " unidad(es).");
+            lblAlerta.getStyleClass().add("mensaje-error");
+            Button btnAjustar = new Button("Ajustar a " + producto.getStock());
+            btnAjustar.getStyleClass().add("boton-secundario");
+            btnAjustar.setOnAction(e -> cambiarCantidad(producto, producto.getStock()));
+            HBox filaAlerta = new HBox(10, lblAlerta, btnAjustar);
+            filaAlerta.setAlignment(Pos.CENTER_LEFT);
+            centro.getChildren().add(filaAlerta);
+        }
+
         tarjeta.getChildren().addAll(imageView, centro);
         return tarjeta;
     }
@@ -390,12 +472,33 @@ public class ClienteCarritoController {
         alerta.setContentText("Total pagado: " + orden.getValorTotalFormateado()
                 + "\nEstado inicial: " + orden.getEstado()
                 + "\nPuedes hacer seguimiento desde tu Historial de compras.");
-        alerta.getButtonTypes().setAll(BTN_ACEPTAR);
+        ButtonType btnGuardarRecibo = new ButtonType("Guardar comprobante (.txt)", ButtonBar.ButtonData.OTHER);
+        alerta.getButtonTypes().setAll(btnGuardarRecibo, BTN_ACEPTAR);
         Window dueno = btnPagar != null && btnPagar.getScene() != null ? btnPagar.getScene().getWindow() : null;
         if (dueno != null) {
             alerta.initOwner(dueno);
         }
-        alerta.showAndWait();
+
+        Optional<ButtonType> respuesta = alerta.showAndWait();
+        if (respuesta.isPresent() && respuesta.get() == btnGuardarRecibo) {
+            guardarComprobanteConSelector(orden, dueno);
+        }
+    }
+
+    private void guardarComprobanteConSelector(Orden orden, Window dueno) {
+        FileChooser selector = new FileChooser();
+        selector.setTitle("Guardar comprobante de compra");
+        selector.setInitialDirectory(ConfiguracionRutas.obtenerDirectorioRecibos());
+        selector.setInitialFileName("comprobante_orden_" + orden.getId() + ".txt");
+        selector.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivo de texto (*.txt)", "*.txt"));
+        File destino = selector.showSaveDialog(dueno);
+        if (destino != null) {
+            try {
+                GeneradorComprobante.guardarEnArchivo(orden, SesionActual.getUsuarioLogueado(), destino);
+            } catch (IOException ex) {
+                mostrarMensaje("No fue posible guardar el comprobante: " + ex.getMessage(), true);
+            }
+        }
     }
 
     private void cargarImagenConFallback(ImageView vista, String referencia, double ancho, double alto) {

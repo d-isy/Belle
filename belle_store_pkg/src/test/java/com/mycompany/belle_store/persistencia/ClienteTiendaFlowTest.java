@@ -6,6 +6,7 @@ import com.mycompany.belle_store.modelos.Producto;
 import com.mycompany.belle_store.modelos.ResumenCompra;
 import com.mycompany.belle_store.modelos.Usuario;
 import com.mycompany.belle_store.sesion.SesionActual;
+import com.mycompany.belle_store.util.GeneradorComprobante;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
@@ -13,6 +14,9 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -276,5 +280,105 @@ public class ClienteTiendaFlowTest {
             gp.eliminar("962");
             gp.eliminar("963");
         }
+    }
+
+    @Test
+    @Order(9)
+    public void testCancelarOrdenPendienteRestauraStockYRechazaNoPendientes() {
+        GestorProductos gp = new GestorProductos();
+        GestorCarrito gc = new GestorCarrito();
+        GestorOrdenes go = new GestorOrdenes();
+
+        String idProd = "970";
+        gp.eliminar(idProd);
+        assertTrue(gp.agregar(new Producto(idProd, "img/camisa_azul.png", "PROD CANCELAR", "CAMISAS", Producto.SEXO_UNISEX, 3, 120000.0)));
+
+        Usuario cliente = new Usuario("USR-F6", "Cliente Cancelar", CLIENTE_A,
+                "f6@correo.com", "3004445566", "Calle 20 # 5-10", "hash", Usuario.ROL_CLIENTE);
+        assertTrue(gc.agregarProducto(CLIENTE_A, idProd, 2, 3));
+
+        Orden orden = go.procesarCompra(cliente, "Calle 20 # 5-10", gc, gp);
+        try {
+            // Tras comprar, stock bajó de 3 a 1
+            assertEquals(1, gp.buscarPorId(idProd).getStock());
+
+            // Cancelar orden pendiente devuelve las 2 unidades => stock vuelve a 3
+            Orden cancelada = go.cancelarOrdenPendiente(orden.getId(), CLIENTE_A, gp);
+            assertEquals("Cancelado", cancelada.getEstado());
+            assertEquals(3, gp.buscarPorId(idProd).getStock());
+
+            // Intentar cancelar de nuevo una orden ya cancelada debe fallar
+            assertThrows(IllegalStateException.class,
+                    () -> go.cancelarOrdenPendiente(orden.getId(), CLIENTE_A, gp));
+
+            // Intentar cancelar una orden Entregada (#112) debe fallar
+            assertThrows(IllegalStateException.class,
+                    () -> go.cancelarOrdenPendiente("112", "28483", gp));
+        } finally {
+            go.eliminar(orden.getId());
+            gp.eliminar(idProd);
+        }
+    }
+
+    @Test
+    @Order(10)
+    public void testGenerarYGuardarComprobanteTxt() throws Exception {
+        GestorOrdenes go = new GestorOrdenes();
+        GestorUsuarios gu = new GestorUsuarios();
+        Orden orden = go.buscarPorId("113");
+        Usuario maria = gu.buscarPorIdentificacion("28483");
+        assertNotNull(orden);
+        assertNotNull(maria);
+
+        File archivo = GeneradorComprobante.guardarEnRecibos(orden, maria);
+        try {
+            assertTrue(archivo.isFile(), "El archivo comprobante .txt debe haberse creado");
+            String contenido = Files.readString(archivo.toPath(), StandardCharsets.UTF_8);
+            assertTrue(contenido.contains("BELLE STORE - COMPROBANTE"));
+            assertTrue(contenido.contains("#113"));
+            assertTrue(contenido.contains("María López"));
+            assertTrue(contenido.contains("TOTAL PAGADO:"));
+        } finally {
+            archivo.delete();
+        }
+    }
+
+    @Test
+    @Order(11)
+    public void testActualizarContactoUsuarioEnPerfil() {
+        GestorUsuarios gu = new GestorUsuarios();
+        Usuario maria = gu.buscarPorIdentificacion("28483");
+        assertNotNull(maria);
+        String celOriginal = maria.getCelular();
+        String dirOriginal = maria.getDireccion();
+
+        try {
+            assertTrue(gu.actualizarContacto(maria.getId(), "3112223344", "Av Siempre Viva 742"));
+            Usuario recargado = gu.buscarPorIdentificacion("28483");
+            assertEquals("3112223344", recargado.getCelular());
+            assertEquals("Av Siempre Viva 742", recargado.getDireccion());
+        } finally {
+            gu.actualizarContacto(maria.getId(), celOriginal, dirOriginal);
+        }
+    }
+
+    @Test
+    @Order(12)
+    public void testTotalConImpuestosYEnvioParaOrdenesAntiguas() {
+        // Orden semilla #111: subtotal $200.000 COP (sin impuestos persistidos) => envío $10.000 + IVA 19% ($38.000) = $248.000
+        GestorOrdenes go = new GestorOrdenes();
+        Orden orden111 = go.buscarPorId("111");
+        assertNotNull(orden111);
+        assertEquals(200000.0, orden111.getSubtotalArticulos());
+        assertEquals(10000.0, orden111.getCostoEnvioEfectivo());
+        assertEquals(38000.0, orden111.getImpuestosEfectivos());
+        assertEquals(248000.0, orden111.getTotalConImpuestosYEnvio());
+
+        // Orden semilla #113: subtotal $300.000 COP => envío gratis ($0) + IVA 19% ($57.000) = $357.000
+        Orden orden113 = go.buscarPorId("113");
+        assertNotNull(orden113);
+        assertEquals(0.0, orden113.getCostoEnvioEfectivo());
+        assertEquals(57000.0, orden113.getImpuestosEfectivos());
+        assertEquals(357000.0, orden113.getTotalConImpuestosYEnvio());
     }
 }

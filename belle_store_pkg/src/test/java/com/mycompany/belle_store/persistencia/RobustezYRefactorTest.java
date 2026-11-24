@@ -39,24 +39,24 @@ public class RobustezYRefactorTest {
         // 1. Sin sesión iniciada: las vistas protegidas redirigen a login
         SesionActual.cerrarSesion();
         assertEquals("login", App.resolverVistaPermitida("admin_dashboard"));
-        assertEquals("login", App.resolverVistaPermitida("cliente_placeholder"));
+        assertEquals("login", App.resolverVistaPermitida("cliente_catalogo"));
         assertEquals("login", App.resolverVistaPermitida("login"));
         assertEquals("registro", App.resolverVistaPermitida("registro"));
         assertEquals("login", App.resolverVistaPermitida(null));
 
-        // 2. Con sesión de CLIENTE: puede entrar a cliente_placeholder, pero NO a admin_dashboard
+        // 2. Con sesión de CLIENTE: puede entrar a cliente_catalogo, pero NO a admin_dashboard
         Usuario cliente = new Usuario("USR-C", "Cliente", "12345", "c@correo.com",
                 "3000000000", "Calle 1", "hash", Usuario.ROL_CLIENTE);
         SesionActual.iniciarSesion(cliente);
-        assertEquals("cliente_placeholder", App.resolverVistaPermitida("cliente_placeholder"));
+        assertEquals("cliente_catalogo", App.resolverVistaPermitida("cliente_catalogo"));
         assertEquals("login", App.resolverVistaPermitida("admin_dashboard"));
 
-        // 3. Con sesión de ADMIN: puede entrar a admin_dashboard y cliente_placeholder
+        // 3. Con sesión de ADMIN: puede entrar a admin_dashboard y cliente_catalogo
         Usuario admin = new Usuario("USR-A", "Admin", "10001", "a@belle.com",
                 "3000000001", "Oficina", "hash", Usuario.ROL_ADMIN);
         SesionActual.iniciarSesion(admin);
         assertEquals("admin_dashboard", App.resolverVistaPermitida("admin_dashboard"));
-        assertEquals("cliente_placeholder", App.resolverVistaPermitida("cliente_placeholder"));
+        assertEquals("cliente_catalogo", App.resolverVistaPermitida("cliente_catalogo"));
     }
 
     @Test

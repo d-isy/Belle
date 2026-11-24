@@ -108,6 +108,9 @@ public class AdminDashboardController {
     private TableColumn<Orden, String> colOrdId;
 
     @FXML
+    private TableColumn<Orden, String> colOrdFecha;
+
+    @FXML
     private TableColumn<Orden, String> colOrdCliente;
 
     @FXML
@@ -395,6 +398,7 @@ public class AdminDashboardController {
 
     private void configurarTablaOrdenes() {
         colOrdId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        colOrdFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
         colOrdTotalArticulos.setCellValueFactory(new PropertyValueFactory<>("totalArticulos"));
         colOrdDireccion.setCellValueFactory(new PropertyValueFactory<>("direccion"));
 
@@ -411,7 +415,7 @@ public class AdminDashboardController {
         colOrdEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
         colOrdEstado.setCellFactory(col -> crearCellFactoryEstadoOrden());
 
-        colOrdValorTotal.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getValorTotal()));
+        colOrdValorTotal.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getTotalConImpuestosYEnvio()));
         colOrdValorTotal.setCellFactory(col -> crearCellFactoryMoneda());
 
         colOrdId.setComparator(Formato::compararNumericoOTexto);
@@ -552,6 +556,8 @@ public class AdminDashboardController {
                     clase = "badge-estado-entregado";
                 } else if ("No Entregado".equalsIgnoreCase(estado)) {
                     clase = "badge-estado-no-entregado";
+                } else if ("Cancelado".equalsIgnoreCase(estado)) {
+                    clase = "badge-estado-cancelado";
                 } else {
                     clase = "badge-estado-pendiente";
                 }

@@ -233,6 +233,69 @@ public class GestorOrdenes extends GestorJson<Orden> {
     }
 
     /**
+     * Cancela una orden en estado {@code "Pendiente"} perteneciente al cliente indicado
+     * y devuelve automáticamente al inventario las unidades compradas.
+     *
+     * @throws IllegalStateException si la orden no existe, no pertenece al cliente o ya no está pendiente.
+     */
+    public synchronized Orden cancelarOrdenPendiente(String ordenId, String clienteIdentificacion,
+                                                     GestorProductos gestorProductos) {
+        if (ordenId == null || ordenId.trim().isEmpty()
+                || clienteIdentificacion == null || clienteIdentificacion.trim().isEmpty()) {
+            throw new IllegalStateException("Datos de orden o cliente inválidos.");
+        }
+
+        List<Orden> ordenes = listar();
+        Orden objetivo = null;
+        for (Orden o : ordenes) {
+            if (ordenId.trim().equalsIgnoreCase(o.getId())) {
+                objetivo = o;
+                break;
+            }
+        }
+
+        if (objetivo == null) {
+            throw new IllegalStateException("No se encontró la orden #" + ordenId + ".");
+        }
+        if (!clienteIdentificacion.trim().equalsIgnoreCase(objetivo.getClienteIdentificacion())) {
+            throw new IllegalStateException("No tienes permiso para cancelar esta orden.");
+        }
+        if (!"Pendiente".equalsIgnoreCase(objetivo.getEstado())) {
+            throw new IllegalStateException("Solo se pueden cancelar órdenes en estado Pendiente (estado actual: "
+                    + objetivo.getEstado() + ").");
+        }
+
+        // 1. Devolver el stock de los artículos al catálogo (si el producto aún existe)
+        List<Producto> catalogo = gestorProductos.listar();
+        Map<String, Producto> porId = new LinkedHashMap<>();
+        for (Producto p : catalogo) {
+            if (p.getId() != null) {
+                porId.put(p.getId().trim().toLowerCase(), p);
+            }
+        }
+        boolean inventarioModificado = false;
+        for (ItemOrden item : objetivo.getArticulos()) {
+            if (item.getProductoId() == null || item.getCantidad() <= 0) continue;
+            Producto prod = porId.get(item.getProductoId().trim().toLowerCase());
+            if (prod != null) {
+                prod.setStock(prod.getStock() + item.getCantidad());
+                inventarioModificado = true;
+            }
+        }
+        if (inventarioModificado && !gestorProductos.guardarTodos(catalogo)) {
+            throw new IllegalStateException("No fue posible restaurar el inventario de productos.");
+        }
+
+        // 2. Actualizar estado de la orden a "Cancelado" y registrar la fecha del cambio
+        objetivo.setEstado("Cancelado");
+        objetivo.setFecha(LocalDateTime.now().format(FORMATO_FECHA));
+        if (!guardarTodos(ordenes)) {
+            throw new IllegalStateException("No fue posible actualizar el estado de la orden.");
+        }
+        return objetivo;
+    }
+
+    /**
      * Busca los IDs de las órdenes que contienen el producto indicado (integridad referencial).
      */
     public List<String> buscarIdsOrdenesConProducto(String productoId) {

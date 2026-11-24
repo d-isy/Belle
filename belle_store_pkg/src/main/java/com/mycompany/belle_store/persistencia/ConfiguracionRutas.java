@@ -25,6 +25,7 @@ public class ConfiguracionRutas {
     public static final String PROPIEDAD_RUTA = "belle.datos";
     private static final String CARPETA_DATOS = "datos";
     private static final String CARPETA_IMAGENES = "imagenes";
+    private static final String CARPETA_RECIBOS = "recibos";
 
     // =========================================================================
     // 3. INICIALIZACIÓN (Constructor privado)
@@ -74,6 +75,17 @@ public class ConfiguracionRutas {
      */
     public static File obtenerDirectorioImagenes() {
         File dir = new File(obtenerDirectorioDatos(), CARPETA_IMAGENES);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return dir;
+    }
+
+    /**
+     * Carpeta donde se guardan por defecto los comprobantes de compra en formato texto (.txt).
+     */
+    public static File obtenerDirectorioRecibos() {
+        File dir = new File(obtenerDirectorioDatos(), CARPETA_RECIBOS);
         if (!dir.exists()) {
             dir.mkdirs();
         }

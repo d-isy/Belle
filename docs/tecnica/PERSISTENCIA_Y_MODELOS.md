@@ -17,7 +17,7 @@ Este documento explica didácticamente cómo funciona el almacenamiento de datos
   Esto asegura que el archivo JSON tenga saltos de línea e identaciones limpias, en lugar de una sola línea comprimida.
 
 ### Flujo de Lectura y Escritura (`GestorJson<T>`)
-Los tres gestores (`GestorUsuarios`, `GestorProductos`, `GestorOrdenes`) heredan de la clase genérica `GestorJson<T>`, que centraliza el acceso a disco:
+Los cinco gestores (`GestorUsuarios`, `GestorProductos`, `GestorOrdenes`, `GestorCarrito` y `GestorDeseados`) heredan de la clase genérica `GestorJson<T>`, que centraliza el acceso a disco:
 1. **Escritura atómica (Serialización):**
    Para evitar que un fallo a mitad de escritura deje un archivo JSON truncado o vacío, `guardarTodos` escribe primero en un archivo temporal (`*.json.tmp`) en la misma carpeta y luego reemplaza el archivo definitivo con `Files.move(..., ATOMIC_MOVE, REPLACE_EXISTING)`.
 2. **Lectura (Deserialización de listas genéricas con TypeToken):**
@@ -62,6 +62,7 @@ Representa los artículos comercializados por la tienda. Se persiste en `Product
 | `imagen` | `String` | Ruta relativa a una imagen local (ej. `"img/camisa_azul.png"`) o una URL remota (`"https://..."`). |
 | `nombre` | `String` | Nombre comercial del artículo (ej. `"CAMISA AZUL"`). |
 | `categoria` | `String` | Categoría textil (ej. `"CAMISAS"`, `"PANTALONES"`, `"ACCESORIOS"`). |
+| `sexo` | `String` | Público objetivo: `"HOMBRE"`, `"MUJER"` o `"UNISEX"` (`"UNISEX"` por defecto si falta en JSON antiguos). |
 | `stock` | `int` | Unidades físicas disponibles en inventario (ej. `2`). |
 | `estado` *(derivado)* | `String` | No se persiste en JSON: `getEstado()` lo calcula siempre desde `stock` (`0 => "AGOTADO"`, `> 0 => "DISPONIBLE"`). |
 | `precio` | `double` | Valor unitario en pesos colombianos (ej. `200000.0`). |
@@ -95,11 +96,24 @@ Representa un pedido o compra realizada por un cliente. Se persiste en `Ordenes.
 | `totalArticulos` *(derivado)* | `int` | No se persiste en JSON: `getTotalArticulos()` suma las cantidades de `articulos`. |
 | `direccion` | `String` | Dirección de entrega (ej. `"Cll 1 # 2"`). |
 | `estado` | `String` | Estado logístico (ej. `"No Entregado"`, `"Entregado"`, `"Pendiente"`). |
-| `valorTotal` *(derivado)* | `double` | No se persiste en JSON: `getValorTotal()` suma `cantidad * precioUnitario` de `articulos`. |
+| `costoEnvio` | `double` | Costo de envío aplicado a la orden (`0.0` por defecto en órdenes antiguas para retrocompatibilidad). |
+| `impuestos` | `double` | Impuestos aplicados a la orden (`0.0` por defecto en órdenes antiguas). |
+| `valorTotal` *(derivado)* | `double` | No se persiste en JSON: `getValorTotal()` suma `articulos + costoEnvio + impuestos`. |
 | `fecha` | `String` | Fecha y hora de creación (ej. `"05/10/2026 05:31:01"`). |
 
-* **Método auxiliar `getArticulosFormateados()`:** Genera una lista con viñetas multilínea para la celda de la tabla (`"• Camisa - 1"`).
+* **Método auxiliar `getArticulosFormateados()`:** Genera una lista con viñetas multilínea para la celda de la tabla de Administrador (`"• Camisa - 1"`).
+* **Método auxiliar `getResumenProductos()`:** Genera la lista horizontal para el Historial de Compras del Cliente (`"CAMISA AZUL, CAMISA BLANCA."`).
 * **Método auxiliar `getValorTotalFormateado()`:** Retorna el valor en formato `"$200.000 COP"`.
+
+---
+
+### 2.5 Modelos de Experiencia de Cliente (`ItemCarrito`, `CarritoCliente`, `DeseadosCliente`, `ResumenCompra`)
+* **`Carritos.json` (`GestorCarrito`):** almacena la lista de `CarritoCliente`, donde cada registro asocia `clienteIdentificacion` con su lista de `ItemCarrito` (`productoId`, `cantidad`). El precio y stock vigentes siempre se consultan desde `Productos.json`.
+* **`Deseados.json` (`GestorDeseados`):** almacena la lista de `DeseadosCliente`, donde cada registro asocia `clienteIdentificacion` con sus `productosIds` favoritos.
+* **`ResumenCompra` (regla de cálculo de totales):**
+  * **Impuestos (IVA 19%):** `Math.round(subtotal * 0.19)` (0 si el carrito está vacío).
+  * **Envío escalonado:** `$10.000 COP` cuando `0 < subtotal < $300.000 COP`, y **`$0 COP` (Envío gratis)** cuando `subtotal >= $300.000 COP` (o si está vacío).
+  * **Total:** `subtotal + costoEnvio + impuestos`.
 
 
 ---

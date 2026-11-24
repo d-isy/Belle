@@ -97,6 +97,7 @@ public class SeedDatos {
                     "img/camisa_azul.png",
                     "CAMISA AZUL",
                     "CAMISAS",
+                    Producto.SEXO_HOMBRE,
                     2,
                     200000.0
             ));
@@ -107,6 +108,7 @@ public class SeedDatos {
                     "img/placeholder_producto.png",
                     "PANTALÓN NEGRO",
                     "PANTALONES",
+                    Producto.SEXO_UNISEX,
                     5,
                     150000.0
             ));
@@ -117,6 +119,7 @@ public class SeedDatos {
                     "img/placeholder_producto.png",
                     "BOLSO DE CUERO",
                     "ACCESORIOS",
+                    Producto.SEXO_MUJER,
                     0,
                     120000.0
             ));
@@ -127,6 +130,7 @@ public class SeedDatos {
                     "img/camisa_blanca.png",
                     "CAMISA BLANCA",
                     "CAMISAS",
+                    Producto.SEXO_HOMBRE,
                     4,
                     180000.0
             ));

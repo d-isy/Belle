@@ -118,9 +118,10 @@
                     <columns>
                         <TableColumn fx:id="colProdId" text="ID" prefWidth="75.0" styleClass="celda-centrada" />
                         <TableColumn fx:id="colProdImagen" text="IMAGEN" prefWidth="95.0" sortable="false" styleClass="celda-centrada" />
-                        <TableColumn fx:id="colProdNombre" text="NOMBRE" prefWidth="220.0" />
-                        <TableColumn fx:id="colProdCategoria" text="CATEGORIA" prefWidth="150.0" />
-                        <TableColumn fx:id="colProdStock" text="STOCK" prefWidth="80.0" styleClass="celda-centrada" />
+                        <TableColumn fx:id="colProdNombre" text="NOMBRE" prefWidth="200.0" />
+                        <TableColumn fx:id="colProdCategoria" text="CATEGORIA" prefWidth="130.0" />
+                        <TableColumn fx:id="colProdSexo" text="SEXO" prefWidth="100.0" styleClass="celda-centrada" />
+                        <TableColumn fx:id="colProdStock" text="STOCK" prefWidth="75.0" styleClass="celda-centrada" />
                         <TableColumn fx:id="colProdEstado" text="ESTADO" prefWidth="130.0" styleClass="celda-centrada" />
                         <TableColumn fx:id="colProdPrecio" text="PRECIO" prefWidth="160.0" styleClass="celda-moneda" />
                         <TableColumn fx:id="colProdAcciones" text="ACCIONES" prefWidth="120.0" sortable="false" styleClass="celda-centrada" />
@@ -196,6 +197,24 @@
                                     <Button fx:id="btnCatAccesorios" text="• ACCESORIOS" userData="ACCESORIOS" maxWidth="Infinity"
                                             styleClass="boton-filtro-opcion"
                                             onAction="#filtrarCategoriaProducto" />
+                                </VBox>
+                            </TitledPane>
+
+                            <!-- Filtro por Sexo -->
+                            <TitledPane fx:id="paneFiltroSexoProd" text="SEXO" expanded="true">
+                                <VBox spacing="4">
+                                    <Button fx:id="btnSexoProdTodos" text="• TODOS" userData="TODOS" maxWidth="Infinity"
+                                            styleClass="boton-filtro-opcion, boton-filtro-opcion-activo"
+                                            onAction="#filtrarSexoProducto" />
+                                    <Button fx:id="btnSexoProdHombre" text="• HOMBRE" userData="HOMBRE" maxWidth="Infinity"
+                                            styleClass="boton-filtro-opcion"
+                                            onAction="#filtrarSexoProducto" />
+                                    <Button fx:id="btnSexoProdMujer" text="• MUJER" userData="MUJER" maxWidth="Infinity"
+                                            styleClass="boton-filtro-opcion"
+                                            onAction="#filtrarSexoProducto" />
+                                    <Button fx:id="btnSexoProdUnisex" text="• UNISEX" userData="UNISEX" maxWidth="Infinity"
+                                            styleClass="boton-filtro-opcion"
+                                            onAction="#filtrarSexoProducto" />
                                 </VBox>
                             </TitledPane>
 

@@ -130,6 +130,27 @@ public class GestorUsuarios extends GestorJson<Usuario> {
     }
 
     /**
+     * Actualiza el celular y la dirección de entrega de un usuario existente.
+     */
+    public synchronized boolean actualizarContacto(String idUsuario, String nuevoCelular, String nuevaDireccion) {
+        if (idUsuario == null || idUsuario.trim().isEmpty()
+                || nuevoCelular == null || nuevaDireccion == null || nuevaDireccion.trim().length() < 4) {
+            return false;
+        }
+        List<Usuario> lista = listar();
+        boolean encontrado = false;
+        for (Usuario u : lista) {
+            if (idUsuario.trim().equalsIgnoreCase(u.getId())) {
+                u.setCelular(nuevoCelular.trim());
+                u.setDireccion(nuevaDireccion.trim());
+                encontrado = true;
+                break;
+            }
+        }
+        return encontrado && guardarTodos(lista);
+    }
+
+    /**
      * Elimina un usuario por su identificador único.
      */
     public synchronized boolean eliminar(String id) {

@@ -112,10 +112,29 @@ public class GestorProductos extends GestorJson<Producto> {
     }
 
     /**
-     * Filtra la lista de productos por término de búsqueda (ID, Nombre o Categoría)
+     * Filtra la lista de productos por término de búsqueda (ID, Nombre, Categoría o Sexo)
      * y por filtros específicos de categoría y estado.
      */
     public List<Producto> filtrar(String terminoBusqueda, String categoriaFiltro, String estadoFiltro) {
+        return filtrar(terminoBusqueda, categoriaFiltro, estadoFiltro, "TODOS", false);
+    }
+
+    /**
+     * Filtra productos de forma exacta por categoría, estado y sexo ({@code TODOS}, {@code HOMBRE}, {@code MUJER}, {@code UNISEX}).
+     */
+    public List<Producto> filtrar(String terminoBusqueda, String categoriaFiltro,
+                                  String estadoFiltro, String sexoFiltro) {
+        return filtrar(terminoBusqueda, categoriaFiltro, estadoFiltro, sexoFiltro, false);
+    }
+
+    /**
+     * Filtra productos por término de búsqueda, categoría, estado y sexo.
+     *
+     * @param incluirUnisex Si es {@code true} y {@code sexoFiltro} es {@code HOMBRE} o {@code MUJER},
+     *                      también incluye los productos {@code UNISEX} (útil para el catálogo del cliente).
+     */
+    public List<Producto> filtrar(String terminoBusqueda, String categoriaFiltro,
+                                  String estadoFiltro, String sexoFiltro, boolean incluirUnisex) {
         List<Producto> todos = listar();
         return todos.stream().filter(p -> {
             // Filtro por término en la barra de búsqueda
@@ -124,7 +143,8 @@ public class GestorProductos extends GestorJson<Producto> {
                 boolean coincideId = p.getId() != null && p.getId().toLowerCase().contains(term);
                 boolean coincideNombre = p.getNombre() != null && p.getNombre().toLowerCase().contains(term);
                 boolean coincideCat = p.getCategoria() != null && p.getCategoria().toLowerCase().contains(term);
-                if (!coincideId && !coincideNombre && !coincideCat) {
+                boolean coincideSexo = p.getSexo().toLowerCase().contains(term);
+                if (!coincideId && !coincideNombre && !coincideCat && !coincideSexo) {
                     return false;
                 }
             }
@@ -139,6 +159,19 @@ public class GestorProductos extends GestorJson<Producto> {
             // Filtro por Estado específico del panel lateral (derivado del stock)
             if (estadoFiltro != null && !estadoFiltro.trim().isEmpty() && !estadoFiltro.equalsIgnoreCase("TODOS")) {
                 if (!p.getEstado().equalsIgnoreCase(estadoFiltro.trim())) {
+                    return false;
+                }
+            }
+
+            // Filtro por Sexo (HOMBRE, MUJER, UNISEX)
+            if (sexoFiltro != null && !sexoFiltro.trim().isEmpty() && !sexoFiltro.equalsIgnoreCase("TODOS")) {
+                String filtro = sexoFiltro.trim();
+                String sexoProducto = p.getSexo();
+                boolean coincideExacto = sexoProducto.equalsIgnoreCase(filtro);
+                boolean coincideComoUnisex = incluirUnisex
+                        && (Producto.SEXO_HOMBRE.equalsIgnoreCase(filtro) || Producto.SEXO_MUJER.equalsIgnoreCase(filtro))
+                        && Producto.SEXO_UNISEX.equalsIgnoreCase(sexoProducto);
+                if (!coincideExacto && !coincideComoUnisex) {
                     return false;
                 }
             }

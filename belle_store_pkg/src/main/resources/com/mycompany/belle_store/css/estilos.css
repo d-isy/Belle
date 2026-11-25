@@ -531,6 +531,16 @@
     -fx-border-width: 1;
 }
 
+.badge-estado-cancelado {
+    -fx-background-color: #FFEBEE;
+    -fx-text-fill: #B71C1C;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 8 3 8;
+    -fx-border-color: #FFCDD2;
+    -fx-border-width: 1;
+}
+
 .boton-accion-tabla {
     -fx-background-color: transparent;
     -fx-padding: 4;
@@ -540,4 +550,413 @@
 
 .boton-accion-tabla:hover {
     -fx-background-color: #E0E0E0;
+}
+
+
+/* ========================================================================= */
+/* EXPERIENCIA DE CLIENTE (FASE 5 - CATÁLOGO, CARRITO, DESEADOS, HISTORIAL)  */
+/* ========================================================================= */
+.fondo-blanco {
+    -fx-background-color: #FFFFFF;
+}
+
+.boton-logo-belle {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #000000;
+    -fx-padding: 0 6 0 0;
+    -fx-cursor: hand;
+}
+
+.boton-logo-belle:hover {
+    -fx-opacity: 0.78;
+}
+
+.boton-nav-link {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #191919;
+    -fx-padding: 5 15 5 15;
+    -fx-cursor: hand;
+}
+
+.boton-nav-link:hover {
+    -fx-text-fill: #555555;
+    -fx-underline: true;
+}
+
+.boton-icono-cabecera {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 6;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+}
+
+.boton-icono-cabecera:hover {
+    -fx-background-color: #C7C7C7;
+}
+
+.badge-contador-cabecera {
+    -fx-background-color: #1F1F1F;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 10.5px;
+    -fx-font-weight: bold;
+    -fx-padding: 1 5 1 5;
+    -fx-background-radius: 10;
+    -fx-translate-x: 4;
+    -fx-translate-y: -2;
+}
+
+.menu-cliente-desplegable {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #BDBDBD;
+    -fx-border-width: 1;
+    -fx-padding: 4 0 4 0;
+}
+
+.menu-cliente-desplegable .menu-item .label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #1F1F1F;
+}
+
+.titulo-seccion-cliente {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.banner-seccion-cliente {
+    -fx-background-color: #D9D9D9;
+    -fx-padding: 26 24 26 24;
+    -fx-border-color: transparent transparent #CCCCCC transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.titulo-banner-cliente {
+    -fx-font-size: 34px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2B2B2B;
+}
+
+/* --- Catálogo de productos (frame 42:193) --- */
+.scroll-catalogo {
+    -fx-background-color: transparent;
+    -fx-background: #FFFFFF;
+    -fx-border-color: transparent;
+}
+
+.scroll-catalogo .viewport {
+    -fx-background-color: #FFFFFF;
+}
+
+.grid-catalogo {
+    -fx-background-color: #FFFFFF;
+}
+
+.barra-lateral-catalogo {
+    -fx-background-color: #D9D9D9;
+    -fx-min-width: 230px;
+    -fx-max-width: 250px;
+    -fx-border-color: transparent transparent transparent #C8C8C8;
+    -fx-border-width: 0 0 0 1;
+}
+
+.item-categoria-catalogo {
+    -fx-background-color: transparent;
+    -fx-text-fill: #3B3B3B;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 18 22 18 22;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.item-categoria-catalogo:hover {
+    -fx-background-color: #C8C8C8;
+    -fx-text-fill: #000000;
+}
+
+.item-categoria-catalogo-activo {
+    -fx-background-color: #BDBDBD;
+    -fx-text-fill: #000000;
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 18 22 18 18;
+    -fx-border-color: transparent transparent transparent #1F1F1F;
+    -fx-border-width: 0 0 0 4;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.tarjeta-producto-catalogo {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E2E2E2;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+    -fx-pref-width: 235px;
+    -fx-max-width: 235px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.tarjeta-producto-catalogo:hover {
+    -fx-border-color: #9E9E9E;
+}
+
+.marco-imagen-producto {
+    -fx-background-color: #F2F2F2;
+    -fx-pref-width: 213px;
+    -fx-pref-height: 230px;
+    -fx-padding: 4;
+}
+
+.nombre-producto-tarjeta {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #191919;
+}
+
+.precio-producto-tarjeta {
+    -fx-font-size: 13.5px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #444444;
+}
+
+.stock-producto-tarjeta {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #6E6E6E;
+}
+
+.boton-corazon {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 22px;
+    -fx-text-fill: #2B2B2B;
+    -fx-padding: 0 4 0 4;
+    -fx-cursor: hand;
+}
+
+.boton-corazon:hover {
+    -fx-text-fill: #8B1A1A;
+}
+
+.boton-corazon-activo {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 22px;
+    -fx-text-fill: #8B1A1A;
+    -fx-padding: 0 4 0 4;
+    -fx-cursor: hand;
+}
+
+.boton-anadir-carrito {
+    -fx-background-color: #2B2B2B;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 13.5px;
+    -fx-font-weight: bold;
+    -fx-pref-height: 36px;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.boton-anadir-carrito:hover {
+    -fx-background-color: #4A4A4A;
+}
+
+.boton-anadir-carrito:disabled {
+    -fx-background-color: #BDBDBD;
+    -fx-text-fill: #555555;
+    -fx-opacity: 0.9;
+}
+
+/* --- Tarjetas horizontales de Carrito y Lista de Deseados --- */
+.tarjeta-horizontal-cliente {
+    -fx-background-color: #F4F4F4;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 1;
+    -fx-padding: 14 20 14 14;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.titulo-tarjeta-horizontal {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #222222;
+}
+
+.precio-tarjeta-horizontal {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2E4053;
+}
+
+.etiqueta-cantidad {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.boton-cantidad {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #BDBDBD;
+    -fx-border-width: 1;
+    -fx-text-fill: #111111;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-min-width: 28px;
+    -fx-min-height: 28px;
+    -fx-padding: 0 6 0 6;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.boton-cantidad:hover {
+    -fx-background-color: #E0E0E0;
+}
+
+.valor-cantidad {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111111;
+    -fx-min-width: 22px;
+    -fx-alignment: CENTER;
+}
+
+.subtotal-item-carrito {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #191919;
+}
+
+.boton-quitar-item {
+    -fx-background-color: transparent;
+    -fx-border-color: #C62828;
+    -fx-border-width: 1;
+    -fx-text-fill: #C62828;
+    -fx-font-size: 12.5px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 10 4 10;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.boton-quitar-item:hover {
+    -fx-background-color: #C62828;
+    -fx-text-fill: #FFFFFF;
+}
+
+.boton-corazon-deseados {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-size: 30px;
+    -fx-text-fill: #8B1A1A;
+    -fx-padding: 4 8 4 8;
+    -fx-cursor: hand;
+}
+
+.boton-corazon-deseados:hover {
+    -fx-opacity: 0.75;
+}
+
+.boton-icono-accion-deseados {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #BDBDBD;
+    -fx-border-width: 1;
+    -fx-padding: 8 12 8 12;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.boton-icono-accion-deseados:hover {
+    -fx-background-color: #E0E0E0;
+}
+
+/* --- Resumen de la compra y botón PAGAR (frame 48:296) --- */
+.panel-resumen-compra {
+    -fx-background-color: #D9D9D9;
+    -fx-min-width: 350px;
+    -fx-max-width: 380px;
+    -fx-padding: 24 26 24 26;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.titulo-resumen-compra {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2B1B17;
+}
+
+.etiqueta-resumen {
+    -fx-font-size: 17px;
+    -fx-text-fill: #333333;
+}
+
+.valor-resumen {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #222222;
+}
+
+.nota-resumen-compra {
+    -fx-font-size: 12.5px;
+    -fx-font-style: italic;
+    -fx-text-fill: #555555;
+    -fx-padding: 4 0 0 0;
+}
+
+.etiqueta-total-resumen {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #000000;
+}
+
+.valor-total-resumen {
+    -fx-font-size: 21px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #000000;
+}
+
+.pie-carrito {
+    -fx-background-color: #666666;
+}
+
+.boton-pagar-carrito {
+    -fx-background-color: #666666;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-pref-height: 58px;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+.boton-pagar-carrito:hover {
+    -fx-background-color: #4D4D4D;
+}
+
+.boton-pagar-carrito:disabled {
+    -fx-background-color: #A0A0A0;
+    -fx-opacity: 0.85;
+}
+
+/* --- Historial de compras (frame 86:261) --- */
+.texto-productos-historial {
+    -fx-font-size: 13px;
+    -fx-text-fill: #2B2B2B;
 }

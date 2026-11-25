@@ -43,6 +43,10 @@ public final class DialogoProducto {
     /** Categorías oficiales del diseño de Figma (las mismas del filtro lateral). */
     public static final List<String> CATEGORIAS = Arrays.asList("CAMISAS", "PANTALONES", "ACCESORIOS");
 
+    /** Opciones oficiales de sexo/público objetivo del producto. */
+    public static final List<String> SEXOS = Arrays.asList(
+            Producto.SEXO_HOMBRE, Producto.SEXO_MUJER, Producto.SEXO_UNISEX);
+
     private static final ButtonType BTN_CANCELAR = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
 
     // =========================================================================
@@ -81,6 +85,10 @@ public final class DialogoProducto {
         ComboBox<String> cbCategoria = new ComboBox<>(FXCollections.observableArrayList(CATEGORIAS));
         cbCategoria.setValue(esNuevo || !CATEGORIAS.contains(original.getCategoria())
                 ? CATEGORIAS.get(0) : original.getCategoria());
+
+        ComboBox<String> cbSexo = new ComboBox<>(FXCollections.observableArrayList(SEXOS));
+        cbSexo.setValue(esNuevo || !SEXOS.contains(original.getSexo())
+                ? Producto.SEXO_UNISEX : original.getSexo());
 
         TextField txtStock = new TextField(esNuevo ? "1" : String.valueOf(original.getStock()));
         Label lblEstado = new Label();
@@ -145,17 +153,19 @@ public final class DialogoProducto {
         grid.add(txtNombre, 1, 1, 2, 1);
         grid.add(new Label("Categoría:"), 0, 2);
         grid.add(cbCategoria, 1, 2, 2, 1);
-        grid.add(new Label("Stock:"), 0, 3);
-        grid.add(txtStock, 1, 3, 2, 1);
-        grid.add(new Label("Estado:"), 0, 4);
-        grid.add(lblEstado, 1, 4, 2, 1);
-        grid.add(new Label("Precio (COP):"), 0, 5);
-        grid.add(txtPrecio, 1, 5, 2, 1);
-        grid.add(new Label("Imagen:"), 0, 6);
-        grid.add(txtImagen, 1, 6);
-        grid.add(btnExaminar, 2, 6);
-        grid.add(vistaPrevia, 1, 7);
-        grid.add(lblError, 0, 8, 3, 1);
+        grid.add(new Label("Sexo:"), 0, 3);
+        grid.add(cbSexo, 1, 3, 2, 1);
+        grid.add(new Label("Stock:"), 0, 4);
+        grid.add(txtStock, 1, 4, 2, 1);
+        grid.add(new Label("Estado:"), 0, 5);
+        grid.add(lblEstado, 1, 5, 2, 1);
+        grid.add(new Label("Precio (COP):"), 0, 6);
+        grid.add(txtPrecio, 1, 6, 2, 1);
+        grid.add(new Label("Imagen:"), 0, 7);
+        grid.add(txtImagen, 1, 7);
+        grid.add(btnExaminar, 2, 7);
+        grid.add(vistaPrevia, 1, 8);
+        grid.add(lblError, 0, 9, 3, 1);
         dialogo.getDialogPane().setContent(grid);
 
         // Validación sin cerrar el diálogo: se consume el evento del botón Guardar si hay errores
@@ -179,6 +189,7 @@ public final class DialogoProducto {
                     imagen,
                     txtNombre.getText().trim().toUpperCase(),
                     cbCategoria.getValue(),
+                    cbSexo.getValue(),
                     stock,
                     Double.parseDouble(txtPrecio.getText().trim())
             ));

@@ -86,6 +86,9 @@ public class AdminDashboardController {
     private TableColumn<Producto, String> colProdCategoria;
 
     @FXML
+    private TableColumn<Producto, String> colProdSexo;
+
+    @FXML
     private TableColumn<Producto, Integer> colProdStock;
 
     @FXML
@@ -103,6 +106,9 @@ public class AdminDashboardController {
 
     @FXML
     private TableColumn<Orden, String> colOrdId;
+
+    @FXML
+    private TableColumn<Orden, String> colOrdFecha;
 
     @FXML
     private TableColumn<Orden, String> colOrdCliente;
@@ -151,6 +157,19 @@ public class AdminDashboardController {
     @FXML
     private Button btnCatAccesorios;
 
+    // Filtros de Productos (Sexo)
+    @FXML
+    private Button btnSexoProdTodos;
+
+    @FXML
+    private Button btnSexoProdHombre;
+
+    @FXML
+    private Button btnSexoProdMujer;
+
+    @FXML
+    private Button btnSexoProdUnisex;
+
     // Filtros de Productos (Estado)
     @FXML
     private Button btnEstProdTodos;
@@ -188,6 +207,7 @@ public class AdminDashboardController {
 
     private ModoVista modoActual = ModoVista.PRODUCTOS;
     private String categoriaProdFiltro = "TODAS";
+    private String sexoProdFiltro = "TODOS";
     private String estadoProdFiltro = "TODOS";
     private String estadoOrdFiltro = "TODOS";
 
@@ -286,6 +306,18 @@ public class AdminDashboardController {
     }
 
     /**
+     * Manejador unificado para los botones de filtro por Sexo de Productos.
+     */
+    @FXML
+    public void filtrarSexoProducto(ActionEvent event) {
+        Button origen = (Button) event.getSource();
+        sexoProdFiltro = String.valueOf(origen.getUserData());
+        actualizarBotonFiltroActivo(origen, Arrays.asList(
+                btnSexoProdTodos, btnSexoProdHombre, btnSexoProdMujer, btnSexoProdUnisex));
+        aplicarFiltrosActuales();
+    }
+
+    /**
      * Manejador unificado para los botones de filtro por Estado de Productos.
      */
     @FXML
@@ -333,6 +365,7 @@ public class AdminDashboardController {
         colProdId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colProdNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colProdCategoria.setCellValueFactory(new PropertyValueFactory<>("categoria"));
+        colProdSexo.setCellValueFactory(new PropertyValueFactory<>("sexo"));
         colProdStock.setCellValueFactory(new PropertyValueFactory<>("stock"));
 
         colProdImagen.setCellValueFactory(new PropertyValueFactory<>("imagen"));
@@ -365,6 +398,7 @@ public class AdminDashboardController {
 
     private void configurarTablaOrdenes() {
         colOrdId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        colOrdFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
         colOrdTotalArticulos.setCellValueFactory(new PropertyValueFactory<>("totalArticulos"));
         colOrdDireccion.setCellValueFactory(new PropertyValueFactory<>("direccion"));
 
@@ -381,7 +415,7 @@ public class AdminDashboardController {
         colOrdEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
         colOrdEstado.setCellFactory(col -> crearCellFactoryEstadoOrden());
 
-        colOrdValorTotal.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getValorTotal()));
+        colOrdValorTotal.setCellValueFactory(cellData -> new SimpleObjectProperty<>(cellData.getValue().getTotalConImpuestosYEnvio()));
         colOrdValorTotal.setCellFactory(col -> crearCellFactoryMoneda());
 
         colOrdId.setComparator(Formato::compararNumericoOTexto);
@@ -417,12 +451,15 @@ public class AdminDashboardController {
         String textoBusqueda = campoBusqueda.getText() != null ? campoBusqueda.getText().trim() : "";
 
         if (modoActual == ModoVista.PRODUCTOS) {
-            List<Producto> filtrados = gestorProductos.filtrar(textoBusqueda, categoriaProdFiltro, estadoProdFiltro);
+            List<Producto> filtrados = gestorProductos.filtrar(
+                    textoBusqueda, categoriaProdFiltro, estadoProdFiltro, sexoProdFiltro);
             tablaProductos.setItems(FXCollections.observableArrayList(filtrados));
             lblContadorRegistros.setText("Mostrando " + filtrados.size() + " producto(s)");
 
             boolean hayFiltro = !textoBusqueda.isEmpty()
-                    || !"TODAS".equals(categoriaProdFiltro) || !"TODOS".equals(estadoProdFiltro);
+                    || !"TODAS".equals(categoriaProdFiltro)
+                    || !"TODOS".equals(sexoProdFiltro)
+                    || !"TODOS".equals(estadoProdFiltro);
             placeholderProductos.setText(hayFiltro
                     ? "Ningún producto coincide con la búsqueda o los filtros."
                     : "Aún no hay productos registrados. Usa \"Añadir Producto +\" para crear el primero.");
@@ -519,6 +556,8 @@ public class AdminDashboardController {
                     clase = "badge-estado-entregado";
                 } else if ("No Entregado".equalsIgnoreCase(estado)) {
                     clase = "badge-estado-no-entregado";
+                } else if ("Cancelado".equalsIgnoreCase(estado)) {
+                    clase = "badge-estado-cancelado";
                 } else {
                     clase = "badge-estado-pendiente";
                 }

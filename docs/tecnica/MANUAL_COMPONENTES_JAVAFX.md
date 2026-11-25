@@ -311,3 +311,32 @@ ok.addEventFilter(ActionEvent.ACTION, evento -> {
     }
 });
 ```
+
+
+---
+
+## 10. Reutilización de Vistas con `fx:include` e Inyección de Subcontrolador (Fase 5)
+
+En la Fase 5, las cuatro pantallas del cliente (`cliente_catalogo`, `cliente_carrito`, `cliente_deseados`, `cliente_historial`) comparten exactamente la misma barra superior interactiva. Para no duplicar XML ni código Java en cuatro controladores, se extrajo `cliente_header.fxml` y se inserta en cada vista mediante `fx:include`:
+
+```xml
+<top>
+    <fx:include fx:id="header" source="cliente_header.fxml" />
+</top>
+```
+
+### ¿Cómo se comunica el controlador padre con la cabecera?
+Cuando un `<fx:include>` tiene `fx:id="header"`, JavaFX busca automáticamente en el controlador padre un atributo llamado `headerController` (el `fx:id` seguido de `Controller`):
+
+```java
+@FXML
+private ClienteHeaderController headerController;
+```
+
+Esto permite que al añadir un producto al carrito o marcar un favorito, el controlador llame directamente a `headerController.actualizarContadores()` para refrescar los badges numéricos al instante.
+
+---
+
+## 11. Cuadrícula Responsiva con `FlowPane` dentro de `ScrollPane` (Fase 5)
+
+Para el catálogo de productos (`cliente_catalogo.fxml`), en lugar de una grilla rígida de columnas fijas, se usa un `FlowPane` dentro de un `ScrollPane` con `fitToWidth="true"` y `hbarPolicy="NEVER"`. Así, cuando el usuario redimensiona la ventana, las tarjetas se reacomodan automáticamente por filas (3, 4 o más por fila) sin generar desplazamiento horizontal.

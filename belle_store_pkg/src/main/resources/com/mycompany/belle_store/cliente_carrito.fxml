@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/13"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.mycompany.belle_store.controladores.ClienteCarritoController"
+            prefWidth="1360.0" prefHeight="820.0"
+            stylesheets="@css/estilos.css">
+
+    <!-- ========================================================================= -->
+    <!-- CABECERA GLOBAL COMPARTIDA DE CLIENTE                                     -->
+    <!-- ========================================================================= -->
+    <top>
+        <fx:include fx:id="header" source="cliente_header.fxml" />
+    </top>
+
+    <!-- ========================================================================= -->
+    <!-- ÁREA CENTRAL: BANNER + ITEMS DEL CARRITO + RESUMEN DE COMPRA              -->
+    <!-- ========================================================================= -->
+    <center>
+        <VBox spacing="0" styleClass="fondo-blanco">
+            <!-- Banner oficial de Figma: CARRITO DE COMPRAS -->
+            <HBox styleClass="banner-seccion-cliente" alignment="CENTER">
+                <Label text="CARRITO DE COMPRAS" styleClass="titulo-banner-cliente" />
+            </HBox>
+
+            <!-- Contenido en dos columnas -->
+            <HBox spacing="28" VBox.vgrow="ALWAYS">
+                <padding>
+                    <Insets top="24" right="36" bottom="24" left="36" />
+                </padding>
+
+                <!-- Columna Izquierda: Lista scrollable de productos en el carrito -->
+                <VBox spacing="12" HBox.hgrow="ALWAYS">
+                    <HBox fx:id="barraAccionesCarrito" alignment="CENTER_RIGHT" spacing="10">
+                        <Label fx:id="lblResumenItems" text="" styleClass="contador-registros" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnVaciarCarrito"
+                                text="Vaciar carrito"
+                                onAction="#vaciarCarrito"
+                                styleClass="boton-quitar-item" />
+                    </HBox>
+
+                    <StackPane VBox.vgrow="ALWAYS">
+                        <ScrollPane fx:id="scrollItems"
+                                    fitToWidth="true"
+                                    hbarPolicy="NEVER"
+                                    styleClass="scroll-catalogo">
+                            <content>
+                                <VBox fx:id="contenedorItems" spacing="14">
+                                    <padding>
+                                        <Insets top="2" right="6" bottom="8" left="2" />
+                                    </padding>
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+
+                        <VBox fx:id="estadoVacio"
+                              alignment="CENTER"
+                              spacing="14"
+                              visible="false"
+                              managed="false">
+                            <Label text="Tu carrito de compras está vacío." styleClass="placeholder-tabla" />
+                            <HBox alignment="CENTER" spacing="12">
+                                <Button text="Explorar catálogo"
+                                        onAction="#irAlCatalogo"
+                                        styleClass="boton-secundario" />
+                                <Button text="Ver lista de deseados"
+                                        onAction="#irADeseados"
+                                        styleClass="boton-secundario" />
+                            </HBox>
+                        </VBox>
+                    </StackPane>
+                </VBox>
+
+                <!-- Columna Derecha: Resumen de la compra (Fiel al frame 48:296 de Figma) -->
+                <VBox styleClass="panel-resumen-compra" spacing="16">
+                    <Label text="Resumen de la compra"
+                           styleClass="titulo-resumen-compra"
+                           maxWidth="Infinity"
+                           alignment="CENTER" />
+
+                    <Separator />
+
+                    <VBox spacing="12">
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Subtotal" styleClass="etiqueta-resumen" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Label fx:id="lblSubtotal" text="0 COP" styleClass="valor-resumen" />
+                        </HBox>
+
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Envío" styleClass="etiqueta-resumen" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Label fx:id="lblEnvio" text="0 COP" styleClass="valor-resumen" />
+                        </HBox>
+
+                        <HBox alignment="CENTER_LEFT">
+                            <Label text="Impuestos (IVA 19%)" styleClass="etiqueta-resumen" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Label fx:id="lblImpuestos" text="0 COP" styleClass="valor-resumen" />
+                        </HBox>
+
+                        <Label fx:id="lblNotaEnvio"
+                               text="Envío gratis en compras desde $300.000 COP."
+                               styleClass="nota-resumen-compra"
+                               wrapText="true" />
+                    </VBox>
+
+                    <Region VBox.vgrow="ALWAYS" />
+                    <Separator />
+
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="TOTAL" styleClass="etiqueta-total-resumen" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="lblTotal" text="0 COP" styleClass="valor-total-resumen" />
+                    </HBox>
+
+                    <Label fx:id="lblMensaje"
+                           text=""
+                           wrapText="true"
+                           visible="false"
+                           managed="false" />
+                </VBox>
+            </HBox>
+        </VBox>
+    </center>
+
+    <!-- ========================================================================= -->
+    <!-- FRANJA INFERIOR: BOTÓN PAGAR DE ANCHO COMPLETO (FIGMA)                    -->
+    <!-- ========================================================================= -->
+    <bottom>
+        <HBox styleClass="pie-carrito">
+            <Button fx:id="btnPagar"
+                    text="PAGAR"
+                    onAction="#manejarPago"
+                    maxWidth="Infinity"
+                    HBox.hgrow="ALWAYS"
+                    styleClass="boton-pagar-carrito" />
+        </HBox>
+    </bottom>
+</BorderPane>

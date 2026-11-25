@@ -14,6 +14,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Window;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +34,7 @@ public final class DialogoOrden {
     // 2. ATRIBUTOS, SERVICIOS Y ESTADO
     // =========================================================================
     public static final List<String> ESTADOS_ORDEN = Arrays.asList("No Entregado", "Entregado", "Pendiente");
+    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private static final ButtonType BTN_CANCELAR = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
 
@@ -109,13 +112,21 @@ public final class DialogoOrden {
 
         Optional<ButtonType> resultado = dialogo.showAndWait();
         if (resultado.isPresent() && resultado.get() == btnActualizar) {
+            String nuevoEstado = cbEstado.getValue();
+            boolean cambioEstado = nuevoEstado != null && !nuevoEstado.equalsIgnoreCase(orden.getEstado());
+            // Si el administrador cambia el estado de la orden, actualizamos la fecha a la actual
+            String fechaActualizada = cambioEstado
+                    ? LocalDateTime.now().format(FORMATO_FECHA)
+                    : orden.getFecha();
             return Optional.of(new Orden(
                     orden.getId(),
                     orden.getClienteIdentificacion(),
                     orden.getArticulos(),
                     txtDireccion.getText().trim(),
-                    cbEstado.getValue(),
-                    orden.getFecha()
+                    nuevoEstado,
+                    fechaActualizada,
+                    orden.getCostoEnvio(),
+                    orden.getImpuestos()
             ));
         }
         return Optional.empty();

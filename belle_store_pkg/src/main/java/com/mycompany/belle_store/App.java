@@ -76,7 +76,10 @@ public class App extends Application {
         switch (vista) {
             case "admin_dashboard":
                 return SesionActual.esAdmin() ? vista : "login";
-            case "cliente_placeholder":
+            case "cliente_catalogo":
+            case "cliente_carrito":
+            case "cliente_deseados":
+            case "cliente_historial":
                 return SesionActual.haySesionIniciada() ? vista : "login";
             default:
                 return vista;
@@ -92,8 +95,14 @@ public class App extends Application {
                 return "Belle Store - Registro";
             case "admin_dashboard":
                 return "Belle Store - Administrador";
-            case "cliente_placeholder":
-                return "Belle Store - Perfil del Cliente";
+            case "cliente_catalogo":
+                return "Belle Store - Catálogo";
+            case "cliente_carrito":
+                return "Belle Store - Carrito de Compras";
+            case "cliente_deseados":
+                return "Belle Store - Lista de Deseados";
+            case "cliente_historial":
+                return "Belle Store - Historial de Compras";
             default:
                 return "Belle Store";
         }

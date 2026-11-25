@@ -43,13 +43,13 @@ Dentro de la raíz del paquete `com.mycompany.belle_store` encontramos:
 | Paquete | Responsabilidad | Ejemplo de Clases |
 | :--- | :--- | :--- |
 | `com.mycompany.belle_store` | Punto de entrada JavaFX, guardia de navegación por rol (`resolverVistaPermitida`) y títulos de ventana. | `App.java` |
-| `com.mycompany.belle_store.modelos` | Clases de dominio con propiedades derivadas consistentes (sin lógica de UI). | `Usuario.java`, `Producto.java`, `Orden.java`, `ItemOrden.java` |
-| `com.mycompany.belle_store.persistencia` | Lectura, escritura atómica y filtrado contra JSON mediante `GestorJson<T>` y Gson. | `GestorJson.java`, `ConfiguracionRutas.java`, `GestorImagenes.java`, `GestorUsuarios.java`, `GestorProductos.java`, `GestorOrdenes.java`, `SeedDatos.java` |
+| `com.mycompany.belle_store.modelos` | Clases de dominio con propiedades derivadas consistentes (sin lógica de UI). | `Usuario`, `Producto`, `Orden`, `ItemOrden`, `ItemCarrito`, `CarritoCliente`, `DeseadosCliente`, `ResumenCompra` |
+| `com.mycompany.belle_store.persistencia` | Lectura, escritura atómica y filtrado contra JSON mediante `GestorJson<T>` y Gson. | `GestorJson`, `ConfiguracionRutas`, `GestorImagenes`, `GestorUsuarios`, `GestorProductos`, `GestorOrdenes`, `GestorCarrito`, `GestorDeseados`, `SeedDatos` |
 | `com.mycompany.belle_store.sesion` | Almacenamiento en memoria de la identidad del usuario actualmente autenticado. | `SesionActual.java` |
 | `com.mycompany.belle_store.seguridad` | Hash PBKDF2 con salt aleatorio y herramienta CLI para generar hashes. | `HashContrasena.java` |
 | `com.mycompany.belle_store.validacion` | Reglas de validación compartidas por controladores y pruebas. | `Validaciones.java` |
-| `com.mycompany.belle_store.util` | Utilidades de formato monetario (`$200.000 COP`) y comparadores numéricos. | `Formato.java` |
-| `com.mycompany.belle_store.controladores` | Controladores FXML y diálogos modales desacoplados (`Task` para operaciones pesadas fuera del hilo de UI). | `LoginController`, `RegistroController`, `AdminDashboardController`, `ClientePlaceholderController`, `DialogoProducto`, `DialogoOrden` |
+| `com.mycompany.belle_store.util` | Utilidades de formato monetario (`$200.000 COP`), comparadores numéricos y comprobantes `.txt`. | `Formato.java`, `GeneradorComprobante.java` |
+| `com.mycompany.belle_store.controladores` | Controladores FXML y diálogos modales desacoplados (`Task` para operaciones pesadas fuera del hilo de UI). | `LoginController`, `RegistroController`, `AdminDashboardController`, `DialogoProducto`, `DialogoOrden`, `ClienteHeaderController`, `ClienteCatalogoController`, `ClienteCarritoController`, `ClienteDeseadosController`, `ClienteHistorialController` |
 
 ---
 

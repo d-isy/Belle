@@ -206,14 +206,14 @@ public class LoginController {
     }
 
     /**
-     * Redirige al Administrador a su Dashboard o al Cliente a su vista Placeholder.
+     * Redirige al Administrador a su Dashboard o al Cliente al Catálogo principal.
      */
     private void redirigirSegunRol(Usuario usuario) {
         try {
             if (usuario.esAdministrador()) {
                 App.setRoot("admin_dashboard");
             } else {
-                App.setRoot("cliente_placeholder");
+                App.setRoot("cliente_catalogo");
             }
         } catch (IOException e) {
             System.err.println("Error al cargar la siguiente vista: " + e.getMessage());

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/13"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.mycompany.belle_store.controladores.ClienteDeseadosController"
+            prefWidth="1360.0" prefHeight="820.0"
+            stylesheets="@css/estilos.css">
+
+    <!-- ========================================================================= -->
+    <!-- CABECERA GLOBAL COMPARTIDA DE CLIENTE                                     -->
+    <!-- ========================================================================= -->
+    <top>
+        <fx:include fx:id="header" source="cliente_header.fxml" />
+    </top>
+
+    <!-- ========================================================================= -->
+    <!-- ÁREA CENTRAL: BANNER + LISTA HORIZONTAL DE PRODUCTOS DESEADOS             -->
+    <!-- ========================================================================= -->
+    <center>
+        <VBox spacing="0" styleClass="fondo-blanco">
+            <!-- Banner oficial de Figma: LISTA DE DESEADOS -->
+            <HBox styleClass="banner-seccion-cliente" alignment="CENTER">
+                <Label text="LISTA DE DESEADOS" styleClass="titulo-banner-cliente" />
+            </HBox>
+
+            <VBox spacing="14" VBox.vgrow="ALWAYS">
+                <padding>
+                    <Insets top="20" right="40" bottom="24" left="40" />
+                </padding>
+
+                <Label fx:id="lblMensajeEstado" text="" visible="false" managed="false" />
+
+                <StackPane VBox.vgrow="ALWAYS">
+                    <ScrollPane fx:id="scrollDeseados"
+                                fitToWidth="true"
+                                hbarPolicy="NEVER"
+                                styleClass="scroll-catalogo">
+                        <content>
+                            <VBox fx:id="contenedorDeseados" spacing="16">
+                                <padding>
+                                    <Insets top="4" right="8" bottom="12" left="4" />
+                                </padding>
+                            </VBox>
+                        </content>
+                    </ScrollPane>
+
+                    <VBox fx:id="estadoVacio"
+                          alignment="CENTER"
+                          spacing="14"
+                          visible="false"
+                          managed="false">
+                        <Label text="Aún no tienes productos en tu lista de deseados."
+                               styleClass="placeholder-tabla" />
+                        <Button text="Explorar catálogo"
+                                onAction="#irAlCatalogo"
+                                styleClass="boton-secundario" />
+                    </VBox>
+                </StackPane>
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>
